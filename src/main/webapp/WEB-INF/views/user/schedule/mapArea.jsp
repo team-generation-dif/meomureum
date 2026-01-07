@@ -15,7 +15,7 @@
 			function() {
 				var container = document.getElementById('map'); //지도를 담을 영역의 DOM 레퍼런스
 				var options = { //지도를 생성할 때 필요한 기본 옵션
-					center: new kakao.maps.LatLng(33.450701, 126.570667), //지도의 중심좌표.
+					center: new kakao.maps.LatLng(33.450701, 126.570667), //지도의 중심좌표
 					level: 3 //지도의 레벨(확대, 축소 정도)
 				};
 				
@@ -24,7 +24,7 @@
 				// 장소 검색 객체 (kakao.maps.services 라이브러리 == 장소 검색 및 주소-좌표 간 변환 서비스)
 		        var ps = new kakao.maps.services.Places(); 
 
-		        // 이전 페이지에서 넘겨받은 검색어 (JSP 표현식 사용)
+		        // 이전 페이지에서 넘겨받은 검색어
 		        var keyword = "${p_name}"; 
 		        
 	            // 키워드로 장소를 검색하는 메소드
