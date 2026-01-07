@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.meomureum.springboot.dao.IMemberDAO">
+
+    <insert id="insertMember" parameterType="com.meomureum.springboot.dto.MemberDTO">
+        INSERT INTO MEMBER (
+            M_CODE, M_ID, M_PASSWD, M_NAME, M_NICK, M_EMAIL, 
+            CREATED_AT, M_TEL, M_GENDER, M_GRADE, M_AUTH
+        ) VALUES (
+            'MEM' || LPAD(MEMBER_SEQ.NEXTVAL, 4, '0'), 
+            #{m_id}, 
+            #{m_passwd}, 
+            #{m_name}, 
+            #{m_nick, jdbcType=VARCHAR}, 
+            #{m_email, jdbcType=VARCHAR}, 
+            SYSDATE, 
+            #{m_tel}, 
+            #{m_gender}, 
+            'BASIC', 
+            'USER'
+        )
+    </insert>
+
+    <select id="checkId" resultType="int">
+        SELECT COUNT(*) FROM MEMBER WHERE M_ID = #{m_id}
+    </select>
+
+    <select id="getMemberById" resultType="com.meomureum.springboot.dto.MemberDTO">
+        SELECT * FROM MEMBER WHERE M_ID = #{m_id}
+    </select>
+
+</mapper>
