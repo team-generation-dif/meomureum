@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.meomureum.springboot.dao.IBoardDAO">
+
+    <!-- 게시판 목록 -->
+    <select id="listDao" resultType="com.meomureum.springboot.dto.BoardDTO">
+        SELECT * FROM board ORDER BY b_code DESC
+    </select>
+
+    <!-- 게시글 상세 조회 -->
+    <select id="selectDao" parameterType="String" resultType="com.meomureum.springboot.dto.BoardDTO">
+        SELECT * FROM board WHERE b_code = #{b_code}
+    </select>
+
+    <!-- 게시글 등록 -->
+    <insert id="insertDao" parameterType="com.meomureum.springboot.dto.BoardDTO">
+        INSERT INTO board 
+        VALUES ('B'||lpad(board_seq.nextval,5,'0'), #{b_title}, #{b_content}, 0, #{b_category}, sysdate, #{m_code,jdbcType=VARCHAR})
+    </insert>
+
+    <!-- 게시글 삭제 -->
+    <delete id="deleteDao" parameterType="String">
+        DELETE FROM board WHERE b_code = #{b_code}
+    </delete>
+
+    <!-- 게시글 수정 -->
+    <update id="updateDao" parameterType="com.meomureum.springboot.dto.BoardDTO">
+        UPDATE board
+        SET b_title = #{b_title},
+            b_content = #{b_content},
+            b_category = #{b_category}
+        WHERE b_code = #{b_code}
+    </update>
+
+    <!-- 제목으로 조회 -->
+    <select id="boardTitle" parameterType="String" resultType="com.meomureum.springboot.dto.BoardDTO">
+        SELECT * FROM board WHERE b_title = #{b_title}
+    </select>
+
+    <!-- 조회수 증가 -->
+    <update id="increaseViewCount" parameterType="String">
+        UPDATE board
+        SET b_view = b_view + 1
+        WHERE b_code = #{b_code}
+    </update>
+
+</mapper>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- <insert id="insertFile" parameterType="com.meomureum.springboot.dto.FileUploadDTO">
+    INSERT INTO fileupload (
+        file_code, target_type, target_code, file_path, file_name, file_size, file_order
+    ) VALUES (
+        'F'||LPAD(fileupload_seq.NEXTVAL, 6, '0'),
+        #{target_type},
+        #{target_code},
+        #{file_path},
+        #{file_name},
+        #{file_size},
+        #{file_order}
+    )
+</insert>
+
+<select id="selectFilesByTarget" parameterType="String" resultType="com.meomureum.springboot.dto.FileUploadDTO">
+    SELECT * FROM fileupload WHERE target_code = #{target_code} ORDER BY file_order
+</select>
+
+<delete id="deleteFilesByTarget" parameterType="String">
+    DELETE FROM fileupload WHERE target_code = #{target_code}
+</delete> -->
