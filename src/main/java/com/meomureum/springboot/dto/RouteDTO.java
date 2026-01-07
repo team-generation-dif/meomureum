@@ -3,6 +3,7 @@ package com.meomureum.springboot.dto;
 import lombok.Data;
 
 @Data
+
 public class RouteDTO {
 	private String r_code;
 	private String p_code;
