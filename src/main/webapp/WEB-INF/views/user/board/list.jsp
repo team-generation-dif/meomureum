@@ -20,14 +20,17 @@
 	<tr>
 		<th>${dto.b_code}</th> 
 		<th>${dto.b_category}</th> 
-		<th><a href="detail?b_code=${dto.b_code}">${dto.b_title}</a></th>  
+		<th><a href="/user/board/detail/${dto.b_code}">${dto.b_title}</a></th>  
 		<th>${dto.created_at}</th> 
 		<th>${dto.b_view}</th> 
+		<th>
+			<th><a href="/user/board/detail/${dto.b_code}">상세보기</a></th>			
+		</th> 
 	</tr>
 	</c:forEach>
 	</table>
-	<div class="text-end">
-                <a href="/board/insertForm">게시글 등록</a>
+	<div style="text-align:right">
+                <a href="/user/board/writeForm">게시글 등록</a>
             </div>
 </body>
 </html>
