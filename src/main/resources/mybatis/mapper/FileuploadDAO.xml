@@ -1,26 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.meomureum.springboot.dao.FileuploadDAO">
-<!-- <insert id="insertFile" parameterType="com.meomureum.springboot.dto.FileUploadDTO">
+<mapper namespace="com.meomureum.springboot.dao.IFileuploadDAO">
+ <insert id="insertFile" parameterType="com.meomureum.springboot.dto.FileuploadDTO">
     INSERT INTO fileupload (
         file_code, target_type, target_code, file_path, file_name, file_size, file_order
     ) VALUES (
         'F'||LPAD(fileupload_seq.NEXTVAL, 6, '0'),
-        #{target_type},
-        #{target_code},
-        #{file_path},
-        #{file_name},
-        #{file_size},
-        #{file_order}
+        #{target_type, jdbcType=VARCHAR},
+        #{target_code, jdbcType=VARCHAR},
+        #{file_path, jdbcType=VARCHAR},
+        #{file_name, jdbcType=VARCHAR},
+        #{file_size, jdbcType=NUMERIC},
+        #{file_order, jdbcType=NUMERIC}
     )
 </insert>
 
-<select id="selectFilesByTarget" parameterType="String" resultType="com.meomureum.springboot.dto.FileUploadDTO">
+<select id="selectFilesByTarget" parameterType="String" resultType="com.meomureum.springboot.dto.FileuploadDTO">
     SELECT * FROM fileupload WHERE target_code = #{target_code} ORDER BY file_order
 </select>
 
 <delete id="deleteFilesByTarget" parameterType="String">
     DELETE FROM fileupload WHERE target_code = #{target_code}
-</delete> -->
+</delete> 
 </mapper>

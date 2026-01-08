@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.meomureum.springboot.dao.IBoardDAO;
@@ -24,7 +25,10 @@ public class BoardController {
 
     @Autowired
     private IBoardDAO boardDAO;
-
+    
+    @Autowired
+    private IFileuploadDAO fileuploadDAO;
+    
     // 📍 게시판 목록
     @GetMapping("/list")
     public String list(Model model) {
@@ -35,11 +39,14 @@ public class BoardController {
 
     // 📍 게시글 상세 조회 (조회수 증가 포함)
     @GetMapping("/detail/{b_code}")
-    public String detail(@PathVariable String b_code, Model model) {
+    public String detail(@PathVariable("b_code") String b_code, Model model) {
         // 조회수 증가
         boardDAO.increaseViewCount(b_code);
+        // 이미지 조회
+        List<FileuploadDTO> fileList = fileuploadDAO.selectFilesByTarget(b_code);
+        model.addAttribute("fileList", fileList);
         // 글 조회
-        BoardDTO board = boardDAO.selectDao(b_code);
+        BoardDTO board = boardDAO.selectDao(b_code);       
         model.addAttribute("board", board);
         return "user/board/detail"; // detail.jsp
     }
@@ -49,39 +56,39 @@ public class BoardController {
     public String writeForm() {
         return "user/board/writeForm"; // writeForm.jsp
     }
+    
+    
+    // [추가] 이미지 업로드 전용 API
+    @PostMapping("/uploadImage")
+    @ResponseBody // 페이지 이동 없이 문자열(URL)만 리턴하기 위해 필수!
+    public String uploadImage(@RequestParam("file") MultipartFile file) throws Exception {
+        if (!file.isEmpty()) {
+            // 파일명 중복 방지를 위한 UUID 랜덤 이름 생성
+            String fileName = java.util.UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+            String uploadPath = "C:/upload/";
+            
+            File dest = new File(uploadPath + fileName);
+            file.transferTo(dest); // C드라이브에 저장
 
+            // 웹에서 접근 가능한 경로 리턴 (WebConfig 설정값과 일치해야 함)
+            return "/upload/" + fileName;
+        }
+        return "error";
+    }
+    
+    
     // 📍 글 작성 처리
     @PostMapping("/write")
-    public String write(BoardDTO dto, @RequestParam("uploadFiles") List<MultipartFile> files) {
-        boardDAO.insertDao(dto); // 게시글 저장
-        String targetCode = dto.getB_code(); // 새 글 코드
-
-        int order = 1;
-        for (MultipartFile file : files) {
-            if (!file.isEmpty()) {
-                String fileName = file.getOriginalFilename();
-                String uploadPath = "C:/upload/";
-                File dest = new File(uploadPath + fileName);
-				/* file.transferTo(dest); */
-
-                FileuploadDTO fileDto = new FileuploadDTO();
-                fileDto.setTarget_type("BOARD");
-                fileDto.setTarget_code(targetCode);
-                fileDto.setFile_path(uploadPath);
-                fileDto.setFile_name(fileName);
-                fileDto.setFile_size(file.getSize());
-                fileDto.setFile_order(order++);
-
-				/* IFileuploadDAO.insertFile(fileDto); */
-            }
-        }
+    public String write(BoardDTO dto) {
+        // 이제 dto.getB_content() 안에는 글과 <img src="..."> 태그가 섞여서 들어옵니다.
+        boardDAO.insertDao(dto); 
         return "redirect:/user/board/list";
     }
 
 
     // 📍 글 수정 폼 이동
     @GetMapping("/updateForm/{b_code}")
-    public String updateForm(@PathVariable String b_code, Model model) {
+    public String updateForm(@PathVariable("b_code") String b_code, Model model) {
         BoardDTO board = boardDAO.selectDao(b_code); // 기존 글 조회
         model.addAttribute("board", board);
         return "user/board/updateForm"; // updateForm.jsp (추가 필요)
@@ -96,7 +103,7 @@ public class BoardController {
 
     // 📍 글 삭제
     @GetMapping("/delete/{b_code}")
-    public String delete(@PathVariable String b_code) {
+    public String delete(@PathVariable("b_code") String b_code) {
         boardDAO.deleteDao(b_code);
         return "redirect:/user/board/list";
     }
