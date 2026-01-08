@@ -4,7 +4,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>머무름 - 메인</title>
+<title>머무름 - 가입 완료 후</title>
 <style>
     .header { display: flex; justify-content: flex-end; padding: 20px; background: #f8f9fa; gap: 15px; }
     .welcome-msg { font-weight: bold; color: #2c3e50; margin-right: 10px; }
@@ -18,7 +18,7 @@
         <c:choose>
             <%-- 1. 로그인 전: 로그인/회원가입 링크 노출 --%>
             <c:when test="${empty sessionScope.loginMember}">
-                <a href="/guest/login" class="btn">로그인</a>
+                <a href="/guest/loginForm" class="btn">로그인</a>
                 <a href="/guest/join" class="btn">회원가입</a>
             </c:when>
 
@@ -34,7 +34,7 @@
 
     <div style="text-align:center; margin-top:100px;">
         <h1>🏠 머무름에 오신 것을 환영합니다</h1>
-        <p>로그인 상태에 따라 상단 메뉴가 변경됩니다.</p>
+        <p>다양한 항목을 이용하려면 로그인을 해주세요.</p>
     </div>
 
 </body>

@@ -16,3 +16,4 @@ public class MemberDTO {
 	private String m_grade;
 	private String m_auth;
 }
+ 
