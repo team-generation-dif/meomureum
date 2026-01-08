@@ -17,9 +17,12 @@
 
     <!-- 게시글 등록 -->
     <insert id="insertDao" parameterType="com.meomureum.springboot.dto.BoardDTO">
-        INSERT INTO board 
-        VALUES ('B'||lpad(board_seq.nextval,5,'0'), #{b_title}, #{b_content}, 0, #{b_category}, sysdate, #{m_code,jdbcType=VARCHAR})
-    </insert>
+    <selectKey keyProperty="b_code" resultType="String" order="BEFORE">
+        SELECT 'B'||LPAD(board_seq.NEXTVAL, 5, '0') FROM dual
+    </selectKey>
+    INSERT INTO board (b_code, b_title, b_content, b_view, b_category, created_at, m_code)
+    VALUES (#{b_code}, #{b_title}, #{b_content}, 0, #{b_category}, sysdate, #{m_code,jdbcType=VARCHAR})
+	</insert>
 
     <!-- 게시글 삭제 -->
     <delete id="deleteDao" parameterType="String">
@@ -46,5 +49,5 @@
         SET b_view = b_view + 1
         WHERE b_code = #{b_code}
     </update>
-
+    
 </mapper>
