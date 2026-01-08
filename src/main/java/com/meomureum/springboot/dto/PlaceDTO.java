@@ -9,7 +9,7 @@ public class PlaceDTO {
 	private String api_code;
 	private String p_place;
 	private String p_category;
-	private int p_lat;
-	private int p_lon;
+	private double p_lat;
+	private double p_lon;
 	private String p_addr;
 }

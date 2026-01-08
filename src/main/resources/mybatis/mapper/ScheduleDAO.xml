@@ -6,21 +6,24 @@
 	
 <mapper namespace="com.meomureum.springboot.dao.IScheduleDAO">
 <!-- 	<select id="listDAO" resultType="com.meomureum.springboot.dto.ScheduleDTO"> -->
-<!-- 		select * from member where s_code like 'S%' order by s_code -->
+<!-- 		select * from schedule where s_code like 'S%' order by s_code -->
 <!-- 	</select> -->
-<!-- 	<select id="selectDAO" resultType="com.meomureum.springboot.dto.ScheduleDTO"> -->
-<!-- 		select * from member where s_code = #{param1} -->
-<!-- 	</select> -->
-<!-- 	<insert id="insertDAO"> -->
-<!-- 		insert into member -->
-<!-- 		 values('M'||member_seq.nextval,#{mid},#{mpwd},#{mname},#{mgender},#{mbirth},#{memail},#{mtel},#{maddr},sysdate,'USER') -->
-<!-- 	</insert> -->
-<!-- 	<delete id="deleteDAO"> -->
-<!-- 		delete from member where mcode = #{param1} -->
-<!-- 	</delete> -->
-<!-- 	<update id="updateDAO"> -->
-<!-- 		update member -->
-<!-- 		 set mpwd = #{mpwd}, memail = #{memail}, mtel = #{mtel}, maddr = #{maddr} -->
-<!-- 		 where mcode = #{mcode} -->
-<!-- 	</update> -->
+	<select id="selectDAO" resultType="com.meomureum.springboot.dto.ScheduleDTO">
+		select * from schedule where s_code = #{param1}
+	</select>
+	<insert id="insertDAO">
+		<selectKey keyProperty="s_code" resultType="string" order="BEFORE">
+        	SELECT 'S'||lpad(schedule_seq.nextval,5,'0') FROM DUAL
+    	</selectKey>
+		insert into schedule
+		 values(#{s_code},#{m_code,jdbcType=VARCHAR},sysdate,#{s_start},#{s_end},#{s_name})
+	</insert>
+	<delete id="deleteDAO">
+		delete from schedule where s_code = #{s_code}
+	</delete>
+ 	<update id="updateDAO"> 
+		update schedule
+		 set s_name = #{s_name}, s_start= #{s_start}, s_end= #{s_end}
+		 where s_code = #{s_code}
+	</update>
 </mapper>

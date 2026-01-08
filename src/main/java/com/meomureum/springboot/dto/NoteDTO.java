@@ -10,4 +10,5 @@ public class NoteDTO {
 	private String n_title;
 	private String n_content;
 	private String created_at;
+	private int n_order;
 }

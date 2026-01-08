@@ -1,24 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.meomureum.springboot.dao.NoteDAO">
-
-    <insert id="insertNote" parameterType="com.meomureum.springboot.dto.NoteDTO">
-        INSERT INTO note_table (
-            n_code, s_code, p_code, n_title, n_content, created_at
-        ) VALUES (
-            #{n_code}, #{s_code}, #{p_code}, #{n_title}, #{n_content}, NOW()
-        )
-    </insert>
-
-    <select id="getReceivedNotes" resultType="com.meomureum.springboot.dto.NoteDTO">
-        SELECT * FROM note_table 
-        WHERE p_code = #{p_code} 
-        ORDER BY created_at DESC
-    </select>
-
-    <select id="getNoteDetail" resultType="com.meomureum.springboot.dto.NoteDTO">
-        SELECT * FROM note_table WHERE n_code = #{n_code}
-    </select>
-
+<mapper namespace="com.meomureum.springboot.dao.INoteDAO">
+	<insert id="insertDAO">
+		insert into note
+		 values('S'||lpad(schedule_seq.nextval,5,'0'),#{s_code},#{p_code,jdbcType=VARCHAR},#{n_title},#{n_content},sysdate,#{n_order})
+	</insert>
+	<delete id="deleteDAO">
+		delete from note where s_code = #{s_code}
+	</delete>
 </mapper>

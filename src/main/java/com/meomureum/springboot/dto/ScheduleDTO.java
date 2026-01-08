@@ -1,5 +1,7 @@
 package com.meomureum.springboot.dto;
 
+import java.util.Date;
+
 import lombok.Data;
 
 @Data
