@@ -27,7 +27,7 @@
 <div class="login-box">
     <h2>MEMBER LOGIN</h2>
     
-    <form action="/guest/login" method="post">
+    <form action="/guest/SignUpComplete" method="post">
         <div class="input-group">
             <input type="text" name="m_id" placeholder="아이디" required>
         </div>

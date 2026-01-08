@@ -1,33 +1,78 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.meomureum.springboot.dao.IMemberDAO">
 
+    <!-- 1. 회원가입 -->
     <insert id="insertMember" parameterType="com.meomureum.springboot.dto.MemberDTO">
         INSERT INTO MEMBER (
-            M_CODE, M_ID, M_PASSWD, M_NAME, M_NICK, M_EMAIL, 
+            M_CODE, M_ID, M_PASSWD, M_NAME, M_NICK, M_EMAIL,
             CREATED_AT, M_TEL, M_GENDER, M_GRADE, M_AUTH
         ) VALUES (
-            'MEM' || LPAD(MEMBER_SEQ.NEXTVAL, 4, '0'), 
-            #{m_id}, 
-            #{m_passwd}, 
-            #{m_name}, 
-            #{m_nick, jdbcType=VARCHAR}, 
-            #{m_email, jdbcType=VARCHAR}, 
-            SYSDATE, 
-            #{m_tel}, 
-            #{m_gender}, 
-            'BASIC', 
+            'MEM' || LPAD(MEMBER_SEQ.NEXTVAL, 4, '0'),
+            #{m_id},
+            #{m_passwd},
+            #{m_name},
+            #{m_nick, jdbcType=VARCHAR},
+            #{m_email, jdbcType=VARCHAR},
+            SYSDATE,
+            #{m_tel},
+            #{m_gender},
+            'BASIC',
             'USER'
         )
     </insert>
 
-    <select id="checkId" resultType="int">
+    <!-- 2. 아이디 중복 체크 -->
+    <select id="checkId" parameterType="string" resultType="int">
         SELECT COUNT(*) FROM MEMBER WHERE M_ID = #{m_id}
     </select>
 
-    <select id="getMemberById" resultType="com.meomureum.springboot.dto.MemberDTO">
-        SELECT * FROM MEMBER WHERE M_ID = #{m_id}
+    <!-- 3. 회원 목록 조회 -->
+    <select id="listDao" resultType="com.meomureum.springboot.dto.MemberDTO">
+        SELECT 
+            M_CODE, M_ID, M_NAME, M_NICK, M_EMAIL, M_TEL,
+            M_GENDER, M_GRADE, M_AUTH, CREATED_AT
+        FROM MEMBER
+        ORDER BY CREATED_AT DESC
+    </select>
+
+    <!-- 4. 회원 상세 조회 (m_code 기준) -->
+    <select id="viewDao" parameterType="string" resultType="com.meomureum.springboot.dto.MemberDTO">
+        SELECT 
+            M_CODE, M_ID, M_NAME, M_NICK, M_EMAIL, M_TEL,
+            M_GENDER, M_GRADE, M_AUTH, CREATED_AT
+        FROM MEMBER
+        WHERE M_CODE = #{m_code}
+    </select>
+
+    <!-- 5. 회원 정보 수정 (m_code 기준) -->
+    <update id="updateDao" parameterType="com.meomureum.springboot.dto.MemberDTO">
+        UPDATE MEMBER
+        SET 
+            M_PASSWD = #{m_passwd},
+            M_NAME   = #{m_name},
+            M_NICK   = #{m_nick},
+            M_EMAIL  = #{m_email},
+            M_TEL    = #{m_tel},
+            M_GENDER = #{m_gender}
+        WHERE M_CODE = #{m_code}
+    </update>
+
+    <!-- 6. 회원 탈퇴 (m_code 기준) -->
+    <delete id="deleteDao" parameterType="string">
+        DELETE FROM MEMBER WHERE M_CODE = #{m_code}
+    </delete>
+
+    <!-- 7. 로그인/상세조회 (아이디 기준) -->
+    <select id="getMemberById" parameterType="string" resultType="com.meomureum.springboot.dto.MemberDTO">
+        SELECT 
+            M_CODE, M_ID, M_PASSWD, M_NAME, M_NICK, M_EMAIL,
+            M_TEL, M_GENDER, M_GRADE, M_AUTH, CREATED_AT
+        FROM MEMBER
+        WHERE M_ID = #{m_id}
     </select>
 
 </mapper>

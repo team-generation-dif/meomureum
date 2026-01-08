@@ -1,81 +1,109 @@
 package com.meomureum.springboot.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import com.meomureum.springboot.dao.IMemberDAO;
 import com.meomureum.springboot.dto.MemberDTO;
-import com.meomureum.springboot.service.MemberService;
-import jakarta.servlet.http.HttpSession;
 
 @Controller
-@RequestMapping("/guest") // 모든 요청 주소의 접두사를 /guest로 고정
+@RequestMapping("/guest")
 public class MemberController {
 
     @Autowired
-    private MemberService memberService;
+    private IMemberDAO memberDAO;
 
-    // 1. 회원가입 폼 이동 (GET /guest/join)
-    @GetMapping("/join")
+    // 1. 회원가입 폼 이동
+    @RequestMapping(value = "/join", method = RequestMethod.GET)
     public String joinForm() {
         return "guest/join";
     }
 
-    // 2. 아이디 중복 확인 팝업 (GET /guest/idCheck)
-    @GetMapping("/idCheck")
+    // 2. 아이디 중복 확인
+    @RequestMapping(value = "/idCheck", method = RequestMethod.GET)
     public String idCheckPage(@RequestParam(value="m_id", required=false) String m_id, Model model) {
         if (m_id != null && !m_id.trim().isEmpty()) {
-            int result = memberService.idCheck(m_id);
+            int result = memberDAO.checkId(m_id);
             model.addAttribute("result", result);
             model.addAttribute("m_id", m_id);
         }
-        return "guest/idCheck"; 
+        return "guest/idCheck";
     }
 
-    // 3. 회원가입 DB 처리 (POST /guest/join)
-    @PostMapping("/join")
+    // 3. 회원가입 처리
+    @RequestMapping(value = "/join", method = RequestMethod.POST)
     public String join(MemberDTO memberDto, Model model) {
-        int result = memberService.register(memberDto);
-        
+        int result = memberDAO.insertMember(memberDto);
         if (result > 0) {
-            // 성공 시 로그인 페이지(/guest/login)로 보냄
-            return "redirect:/guest/login"; 
-        } else if (result == -1) {
-            model.addAttribute("error", "이미 사용 중인 정보가 있습니다.");
-            return "guest/join"; 
+            return "redirect:/guest/SignUpComplete";
         } else {
-            return "redirect:/guest/join?error=1";
+            model.addAttribute("error", "회원가입에 실패했습니다.");
+            return "guest/join";
         }
     }
 
-    // 4. 로그인 폼 이동 (GET /guest/login)
-    // [중요] 기존 /loginForm에서 /login으로 주소를 수정하여 리다이렉트와 일치시킴
-    @GetMapping("/login")
+    // 4. 회원 목록 조회
+    @RequestMapping(value = "/list", method = RequestMethod.GET)
+    public String list(Model model) {
+        List<MemberDTO> members = memberDAO.listDao();
+        model.addAttribute("members", members);
+        return "admin/member/memberList";
+    }
+
+    // 5. 회원 상세 조회
+    @RequestMapping(value = "/view/{m_code}", method = RequestMethod.GET)
+    public String view(@PathVariable("m_code") String m_code, Model model) {
+        MemberDTO member = memberDAO.viewDao(m_code);
+        model.addAttribute("member", member);
+        return "admin/member/memberView";
+    }
+
+    // 6. 회원 정보 수정 처리
+    @RequestMapping(value = "/update", method = RequestMethod.POST)
+    public String update(MemberDTO dto) {
+        int result = memberDAO.updateDao(dto);
+        // 수정 성공 시 완료 페이지를 보여주는 메서드로 리다이렉트
+        return (result > 0) ? "redirect:/user/mypage/myUpdate" 
+                            : "redirect:/user/mypage/view/" + dto.getM_code() + "?error=update";
+    }
+
+    // 6-1. 수정 완료 결과 페이지 (404 방지용 추가)
+    @RequestMapping(value = "/myUpdateView", method = RequestMethod.GET)
+    public String myUpdateView() {
+        return "user/mypage/myUpdateView";
+    }
+
+    // 7. 회원 탈퇴 처리
+    @RequestMapping(value = "/delete/{m_code}", method = RequestMethod.GET)
+    public String delete(@PathVariable("m_code") String m_code) {
+        int result = memberDAO.deleteDao(m_code);
+        // 탈퇴 성공 시 완료 페이지를 보여주는 메서드로 리다이렉트
+        return (result > 0) ? "redirect:/user/mypage/mydelete" 
+                            : "redirect:/guest/view/" + m_code + "?error=delete";
+    }
+
+    // 7-1. 탈퇴 완료 결과 페이지 (404 방지용 추가)
+    @RequestMapping(value = "/mydeleteView", method = RequestMethod.GET)
+    public String mydeleteView() {
+        return "user/mypage/mydelete";
+    }
+
+    // 8. 로그인 폼 이동
+    @RequestMapping(value = "/loginForm", method = RequestMethod.GET)
     public String loginForm() {
-        return "guest/login"; // 파일명이 login.jsp인 경우
+        return "guest/loginForm";
     }
 
-    // 5. 로그인 인증 처리 (POST /guest/login)
-    @PostMapping("/login")
-    public String login(@RequestParam("m_id") String m_id, 
-                        @RequestParam("m_passwd") String m_passwd, 
-                        HttpSession session, Model model) {
-        
-        MemberDTO loginMember = memberService.login(m_id, m_passwd);
-        
-        if (loginMember != null) {
-            session.setAttribute("loginMember", loginMember);
-            return "redirect:/"; // 메인 페이지로 이동
-        } else {
-            model.addAttribute("error", "아이디 또는 비밀번호를 확인해주세요.");
-            return "guest/login";
-        }
-    }
-
-    // 6. 로그아웃 처리 (GET /guest/logout)
-    @GetMapping("/logout")
-    public String logout(HttpSession session) {
-        session.invalidate(); 
-        return "redirect:/";
+    // 9. 회원가입 완료 페이지
+    @RequestMapping(value = "/SignUpComplete", method = RequestMethod.GET)
+    public String signUpComplete() {
+        return "guest/SignUpComplete";
     }
 }
