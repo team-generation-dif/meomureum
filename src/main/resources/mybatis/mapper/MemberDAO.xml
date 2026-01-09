@@ -67,10 +67,9 @@
     </delete>
 
     <!-- 7. 로그인/상세조회 (아이디 기준) -->
-    <select id="getMemberById" parameterType="string" resultType="com.meomureum.springboot.dto.MemberDTO">
+    <select id="selectDAOById" parameterType="string" resultType="com.meomureum.springboot.dto.MemberDTO">
         SELECT 
-            M_CODE, M_ID, M_PASSWD, M_NAME, M_NICK, M_EMAIL,
-            M_TEL, M_GENDER, M_GRADE, M_AUTH, CREATED_AT
+            *
         FROM MEMBER
         WHERE M_ID = #{m_id}
     </select>

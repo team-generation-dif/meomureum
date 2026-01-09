@@ -79,52 +79,88 @@
                 alert('검색 중 오류가 발생했습니다.');
             }
         }
-
+        
         function displayPlaces(places) {
             var listEl = document.getElementById('placesList'), 
                 bounds = new kakao.maps.LatLngBounds();
             
             listEl.innerHTML = '';
 
+            // 현재 선택된 여행 기간 계산 (메인 JSP의 hidden 필드 참조)
+            const start = new Date(document.getElementById('s_start').value);
+            const end = new Date(document.getElementById('s_end').value);
+            let day = Math.round(Math.abs(end - start) / (1000 * 60 * 60 * 24)) + 1;
+
             for (var i = 0; i < places.length; i++) {
                 var placePosition = new kakao.maps.LatLng(places[i].y, places[i].x),
                     marker = addMarker(placePosition), 
-                    itemEl = getListItem(i, places[i]);
+                    itemEl = getListItem(i, places[i], day); // totalDays 전달
 
                 bounds.extend(placePosition);
 
-                (function(marker, title) {
+                // 클로저를 이용한 이벤트 바인딩
+                (function(marker, place) {
+                	// 마커에 마우스오버 시 인포윈도우 표시
                     kakao.maps.event.addListener(marker, 'mouseover', function() {
-                        displayInfowindow(marker, title);
+                        displayInfowindow(marker, place);
                     });
+
+                    //마커에서 마우스아웃 시 인포윈도우 닫기
                     kakao.maps.event.addListener(marker, 'mouseout', function() {
                         infowindow.close();
                     });
+                    
+                 	// 목록 아이템에 마우스 오버 시 인포윈도우 표시
                     itemEl.onmouseover = function() {
-                        displayInfowindow(marker, title);
+                        displayInfowindow(marker, place);
                     };
+                    // 목록 아이템에서 마우스 아웃 시 인포윈도우 닫기
                     itemEl.onmouseout = function() {
-                        infowindow.close();
+                         infowindow.close();
                     };
+                    // 목록 아이템 클릭 시 해당 마커로 지도 이동
                     itemEl.onclick = function() {
                         map.panTo(marker.getPosition());
                     };
-                })(marker, places[i].place_name);
+                })(marker, places[i]);
 
                 listEl.appendChild(itemEl);
             }
             map.setBounds(bounds);
         }
-
-        function getListItem(index, places) {
+        
+        function getListItem(index, place, totalDays) {
             var el = document.createElement('li');
-            var itemStr = '<div class="item">' +
-                '   <div class="info">' +
-                '       <span class="title">' + (index + 1) + '. ' + places.place_name + '</span>' +
-                '       <div class="addr">' + (places.road_address_name ? places.road_address_name : places.address_name) + '</div>' +
-                '   </div>' +
-                '</div>';
-            el.innerHTML = itemStr;
+            el.className = 'item';
+            
+            // 버튼을 생성할 태그를 함수에 저장
+            let buttonsHtml = '';
+            for (let d = 1; d <= totalDays; d++) {
+                // JSON 데이터를 안전하게 넘기기 위해 임시 변수에 저장하거나 파라미터로 직접 전달
+                buttonsHtml += `<button type="button" class="day-add-btn" data-day="\${d}">Day \${d}</button> `;
+            }
+            
+            // 기본 장소 정보 HTML
+            el.innerHTML = `
+		        <div class="info">
+		            <span class="title">\${index + 1}. \${place.place_name}</span>
+		            <div class="addr">\${place.road_address_name || place.address_name}</div>
+		            <div class="add-buttons" style="margin-top:7px;">
+		                \${buttonsHtml}
+		            </div>
+		        </div>
+		    `;
+
+            // 버튼 클릭 이벤트 바인딩
+		    const btns = el.querySelectorAll('.day-add-btn');
+		    btns.forEach(btn => {
+		        btn.onclick = function(e) {
+		            //e.stopPropagation(); // li의 클릭 이벤트(지도 이동) 방지
+		            const day = this.getAttribute('data-day');
+		            addRoute(day, place); // schedule.jsp의 함수 호출
+		        };
+		    });
+
             return el;
         }
 
@@ -136,12 +172,24 @@
             return marker;
         }
 
-        function displayInfowindow(marker, title) {
-            var content = '<div style="padding:5px;z-index:1;font-size:12px;">' + title + '</div>';
+        
+        function displayInfowindow(marker, place) {
+            // 장소 데이터를 JSON 문자열로 변환하여 함수 인자로 전달 (따옴표 주의)
+            var placeJson = JSON.stringify(place).replace(/"/g, '&quot;');
+            
+            var content = `
+                <div style="padding:10px; min-width:150px;">
+                    <strong>\${place.place_name}</strong><br>
+                    <span style="font-size:11px; color:#666;">\${place.road_address_name || place.address_name}</span><br>
+                    <p style="font-size:11px; color:blue; margin-top:5px;">← 왼쪽 목록에서 날짜별 추가 버튼을 누르세요</p>
+                </div>`;
+                          
             infowindow.setContent(content);
             infowindow.open(map, marker);
         }
+        
     });
+
 </script>
 </body>
 </html>

@@ -1,24 +1,22 @@
-let n_count = 0;
 function newNote(){
 	const container = document.getElementById('n_container');
     const template = document.getElementById('n_template').innerHTML;
 	const newNote = document.createElement("div")
 	
-	newNote.className = "n_item"
+	newNote.className = "n_item";
 	newNote.innerHTML = template;
 	
 	container.appendChild(newNote);
-	n_count++;
 }
 
-function deleteNote(btn){
-    const n_item = btn.closest('.n_item');
+function deleteNote(item){
+    const n_item = item.closest('.n_item');
     n_item.remove();
-    n_count--;
+	setOrder();
 }
 
-function moveUpNote(btn){
-	const n_item = btn.closest('.n_item');
+function moveUpNote(item){
+	const n_item = item.closest('.n_item');
 	const prev = n_item.previousElementSibling;
     
     if (prev) {
@@ -27,8 +25,8 @@ function moveUpNote(btn){
     }
 }
 
-function moveDownNote(btn){
-	const n_item = btn.closest('.n_item');
+function moveDownNote(item){
+	const n_item = item.closest('.n_item');
 	const next = n_item.nextElementSibling;
     
     if (next) {

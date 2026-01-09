@@ -9,7 +9,7 @@ import com.meomureum.springboot.dto.PlaceDTO;
 @Mapper
 public interface IPlaceDAO {
 	// 장소 정보 저장
-    int insertPlace(PlaceDTO placeDto);
+    int insertDAO(PlaceDTO placeDto);
 
     // 전체 장소 목록 조회
     List<PlaceDTO> getAllPlaces();

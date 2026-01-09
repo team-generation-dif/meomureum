@@ -17,21 +17,21 @@ public class MemberService {
         return memberDAO.checkId(m_id);
     }
 
-    // 회원가입
-    public int register(MemberDTO memberDto) {
-        if (memberDAO.checkId(memberDto.getM_id()) > 0) {
-            return 0;
-        }
-        return memberDAO.insertMember(memberDto);
-    }
-
-    // 로그인
-    public MemberDTO login(String m_id, String m_passwd) {
-        MemberDTO member = memberDAO.getMemberById(m_id);
-        if (member != null && member.getM_passwd().equals(m_passwd)) {
-            member.setM_passwd(""); 
-            return member;
-        }
-        return null;
-    }
+//    // 회원가입
+//    public int register(MemberDTO memberDto) {
+//        if (memberDAO.checkId(memberDto.getM_id()) > 0) {
+//            return 0;
+//        }
+//        return memberDAO.insertMember(memberDto);
+//    }
+//
+//    // 로그인
+//    public MemberDTO login(String m_id, String m_passwd) {
+//        MemberDTO member = memberDAO.selectDAOById(m_id);
+//        if (member != null && member.getM_passwd().equals(m_passwd)) {
+//            member.setM_passwd(""); 
+//            return member;
+//        }
+//        return null;
+//    }
 }
