@@ -16,8 +16,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.meomureum.springboot.dao.IBoardDAO;
 import com.meomureum.springboot.dao.IFileuploadDAO;
+import com.meomureum.springboot.dao.IReplyDAO;
 import com.meomureum.springboot.dto.BoardDTO;
 import com.meomureum.springboot.dto.FileuploadDTO;
+import com.meomureum.springboot.dto.ReplyDTO;
 
 @Controller
 @RequestMapping("/user/board")
@@ -28,6 +30,10 @@ public class BoardController {
     
     @Autowired
     private IFileuploadDAO fileuploadDAO;
+    
+    @Autowired
+    private IReplyDAO replyDAO;
+
     
     // 📍 게시판 목록
     @GetMapping("/list")
@@ -48,7 +54,11 @@ public class BoardController {
         // 글 조회
         BoardDTO board = boardDAO.selectDao(b_code);       
         model.addAttribute("board", board);
-        return "user/board/detail"; // detail.jsp
+        // 댓글 목록 조회 추가
+        List<ReplyDTO> replyList = replyDAO.getReplies(b_code);
+        model.addAttribute("replyList", replyList);
+
+        return "user/board/detail"; // detail.jsp               
     }
 
     // 📍 글 작성 폼 이동
@@ -107,4 +117,10 @@ public class BoardController {
         boardDAO.deleteDao(b_code);
         return "redirect:/user/board/list";
     }
+    // 📍 댓글 등록
+    @PostMapping("/reply/write")
+    public String writeReply(ReplyDTO dto) {
+        replyDAO.insertReply(dto); // 댓글 저장
+        return "redirect:/user/board/detail/" + dto.getB_code(); // 저장 후 상세 페이지로 이동
+    } 
 }

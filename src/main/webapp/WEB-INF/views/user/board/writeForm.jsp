@@ -13,11 +13,11 @@
 </head>
 
 <body>
-    <div class="container" style="margin-top: 20px;">
+    <div class="container" style="margin-top: 20px; max-width: 900px;">
         <h3>게시글 작성</h3>
         
         <form name="boardForm" method="post" action="/user/board/write">
-            <table border="1" width="800" style="border-collapse: collapse; border-color: #ddd;">
+            <table border="1" width="100%" style="border-collapse: collapse; border-color: #ddd;">
                 <tr>
                     <td style="padding: 10px; background: #f8f9fa; width: 150px; font-weight: bold;">분류</td>
                     <td style="padding: 10px;">
@@ -38,16 +38,16 @@
                         <textarea id="summernote" name="b_content" required></textarea>
                     </td>           
                 </tr>
-            </table>
-            
-            <div style="margin-top: 20px;">
-                <input type="submit" value="작성 완료" class="btn btn-primary">
-                <input type="reset" value="초기화" class="btn btn-warning">
-                <a href="/user/board/list" class="btn btn-default">목록으로</a>
-            </div>
+            </table>           
+            	<div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
+    				<!-- 왼쪽: 작성 버튼 -->
+    			<input type="submit" value="작성" class="btn btn-primary">
+
+    				<!-- 오른쪽: 목록으로 버튼 -->
+    			<a href="/user/board/list" class="btn btn-default">목록으로</a>
+				</div>
         </form>
     </div>
-
 <script>
 $(document).ready(function() {
     $('#summernote').summernote({
