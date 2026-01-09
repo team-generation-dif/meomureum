@@ -16,6 +16,6 @@ public interface IMemberDAO {
 	public int updateDao(MemberDTO dto);// 회원 정보 수정
 	public int deleteDao(String m_code);              // 회원 탈퇴
     // 3. 로그인/상세조회
-    MemberDTO getMemberById(String m_id);
+    public MemberDTO selectDAOById(String m_id);
     
 }

@@ -9,15 +9,8 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
 <script src="/JS/noteControl.js"></script>
-<script>
-// 제출 전 순서(n_order)를 1, 2, 3...으로 채워주는 함수
-function setOrder() {
-    const orders = document.querySelectorAll('input[name="n_order"]');
-    orders.forEach((order, index) => {
-        order.value = index + 1;
-    });
-}
-</script>
+<script src="/JS/routeControl.js"></script>
+<script src="/JS/scheduleOrder.js"></script>
 <style>
 	.container {
 	    display: flex; /* 가로 배열 */
@@ -74,24 +67,25 @@ function setOrder() {
 						<div id="n_container"></div>
 						<input type="button" value="새 노트 작성" onclick="newNote()">
 						<script type="text/template" id="n_template">
-					<div>
-						<div>
-							<input type="text" name="n_title" placeholder="새로운 경험을 작성하세요">
-							<input type="button" value="▲" onclick="moveUpNote(this)">
-							<input type="button" value="▼" onclick="moveDownNote(this)">
-						</div>
-						<textarea type="text" name="n_content"></textarea>
-						<input type="hidden" name="n_order">
-						<input type="button" value="노트 삭제" onclick="deleteNote(this)">
-					</div>
-				</script>
+							<div>
+								<div>
+									<input type="text" name="n_title" placeholder="새로운 경험을 작성하세요">
+									<input type="button" value="▲" onclick="moveUpNote(this); setOrder();">
+									<input type="button" value="▼" onclick="moveDownNote(this); setOrder();">
+								</div>
+								<textarea type="text" name="n_content"></textarea>
+								<input type="hidden" name="n_order">
+								<input type="button" value="노트 삭제" onclick="deleteNote(this)">
+							</div>
+						</script>
 					</div>
 					<!-- 루트 영역 -->
-				
-				
+					<div>
+						<div id="r_container"></div>
+					</div>
 					
 				</c:if>
-				<!-- 2. 수정으로 들어왔을 때 (마이페이지 등) -->
+				<!-- 수정으로 들어왔을 때 (마이페이지 등) -->
 				<c:if test="${mode == 'update'}">
 					<input type="hidden" name="s_code" value="${dto.s_code}">
 					<input type="hidden" value="${mode}">
@@ -109,22 +103,23 @@ function setOrder() {
 						<div id="n_container"></div>
 						<input type="button" value="새 노트 작성" onclick="newNote()">
 						<script type="text/template" id="n_template">
-					<div>
-						<div>
-							<input type="text" name="n_title" placeholder="새로운 경험을 작성하세요">
-							<input type="button" value="▲" onclick="moveUpNote(this)">
-							<input type="button" value="▼" onclick="moveDownNote(this)">
-						</div>
-						<textarea type="text" name="n_content"></textarea>
-						<input type="hidden" name="n_order">
-						<input type="button" value="노트 삭제" onclick="deleteNote(this)">
-					</div>
-				</script>
+							<div>
+								<div>
+									<input type="text" name="n_title" placeholder="새로운 경험을 작성하세요">
+									<input type="button" value="▲" onclick="moveUpNote(this)">
+									<input type="button" value="▼" onclick="moveDownNote(this)">
+								</div>
+								<textarea type="text" name="n_content"></textarea>
+								<input type="hidden" name="n_order">
+								<input type="button" value="노트 삭제" onclick="deleteNote(this)">
+							</div>
+						</script>
 					</div>
 					<!-- 루트 영역 -->
+					<div>
+						<div id="r_container"></div>
+					</div>
 				
-				
-					
 				</c:if>
 				<input type="submit" value="계획 저장">
 			</form>
@@ -147,6 +142,12 @@ function setOrder() {
 			                // s_start와 s_end 히든 필드에 각각 날짜 할당
 			                document.getElementById("s_start").value = instance.formatDate(selectedDates[0], "Y-m-d");
 			                document.getElementById("s_end").value = instance.formatDate(selectedDates[1], "Y-m-d");
+			                newRoute();
+			            }
+			        },
+			        onReady: function(selectedDates, dateStr, instance) {
+			            if (selectedDates.length === 2) {
+			                newRoute();
 			            }
 			        }
 			    });

@@ -27,12 +27,12 @@
 <div class="login-box">
     <h2>MEMBER LOGIN</h2>
     
-    <form action="/guest/SignUpComplete" method="post">
+    <form action="/j_spring_security_check" method="post">
         <div class="input-group">
-            <input type="text" name="m_id" placeholder="아이디" required>
+            <input type="text" name="j_username" placeholder="아이디" required>
         </div>
         <div class="input-group">
-            <input type="password" name="m_passwd" placeholder="비밀번호" required>
+            <input type="password" name="j_password" placeholder="비밀번호" required>
         </div>
         <button type="submit" class="btn-login">로그인</button>
     </form>

@@ -3,6 +3,7 @@ package com.meomureum.springboot.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,6 +21,9 @@ public class MemberController {
     @Autowired
     private IMemberDAO memberDAO;
 
+    @Autowired
+	private PasswordEncoder passwordEncoder;
+    
     // 1. 회원가입 폼 이동
     @RequestMapping(value = "/join", method = RequestMethod.GET)
     public String joinForm() {
@@ -40,6 +44,18 @@ public class MemberController {
     // 3. 회원가입 처리
     @RequestMapping(value = "/join", method = RequestMethod.POST)
     public String join(MemberDTO memberDto, Model model) {
+    	
+    	// 비밀번호 암호화 처리
+    	String encodedPassword = passwordEncoder.encode(memberDto.getM_passwd());
+    	memberDto.setM_passwd(encodedPassword);
+    	
+    	// 특정 아이디(admin)만 관리자 권한 부여
+        if(memberDto.getM_id().equals("admin")) {
+        	memberDto.setM_auth("ADMIN");
+        } else {
+        	memberDto.setM_auth("USER");
+        }
+    	
         int result = memberDAO.insertMember(memberDto);
         if (result > 0) {
             return "redirect:/guest/SignUpComplete";
