@@ -1,41 +1,16 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>머무름 - 가입 완료 후</title>
-<style>
-    .header { display: flex; justify-content: flex-end; padding: 20px; background: #f8f9fa; gap: 15px; }
-    .welcome-msg { font-weight: bold; color: #2c3e50; margin-right: 10px; }
-    .btn { text-decoration: none; color: #555; font-size: 14px; }
-    .btn:hover { color: #3498db; }
-</style>
+<title>가입 완료</title>
 </head>
-<body>
-
-    <div class="header">
-        <c:choose>
-            <%-- 1. 로그인 전: 로그인/회원가입 링크 노출 --%>
-            <c:when test="${empty sessionScope.loginMember}">
-                <a href="/guest/loginForm" class="btn">로그인</a>
-                <a href="/guest/join" class="btn">회원가입</a>
-            </c:when>
-
-            <%-- 2. 로그인 후: 환영 메시지/로그아웃 링크 노출 --%>
-            <c:otherwise>
-                <span class="welcome-msg">
-                    ✨ ${sessionScope.loginMember.m_nick}님 환영합니다!
-                </span>
-                <a href="/guest/logout" class="btn">로그아웃</a>
-            </c:otherwise>
-        </c:choose>
-    </div>
-
-    <div style="text-align:center; margin-top:100px;">
-        <h1>🏠 머무름에 오신 것을 환영합니다</h1>
-        <p>다양한 항목을 이용하려면 로그인을 해주세요.</p>
-    </div>
-
+<body style="text-align:center; padding-top:100px;">
+    <h2>🎉 회원가입이 완료되었습니다!</h2>
+    <p>머무름의 가족이 되신 것을 환영합니다.</p>
+    <p>지금 바로 로그인하여 서비스를 이용해보세요.</p>
+    <hr style="width:300px;">
+    <br>
+    <a href="/guest/loginForm" style="padding:10px 20px; background:#3498db; color:white; text-decoration:none; border-radius:5px;">로그인 하러 가기</a>
+    <a href="/" style="margin-left:10px; color:#777;">메인으로 이동</a>
 </body>
 </html>

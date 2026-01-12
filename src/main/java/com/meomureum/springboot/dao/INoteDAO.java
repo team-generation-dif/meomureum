@@ -10,4 +10,5 @@ import com.meomureum.springboot.dto.NoteDTO;
 public interface INoteDAO {
 	public int deleteDAO(String s_code);
 	public int insertDAO(NoteDTO dto);
+	public List<NoteDTO> listDAOBySCode(String s_code);
 }

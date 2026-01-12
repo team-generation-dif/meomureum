@@ -50,6 +50,11 @@
             alert(error);
         }
     };
+ // loginForm.jsp 하단 script 부분
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('message') === 'deleted') {
+        alert("회원 탈퇴가 완료되었습니다. 그동안 이용해 주셔서 감사합니다.");
+    }
 </script>
 
 </body>

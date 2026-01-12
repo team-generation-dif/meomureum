@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.meomureum.springboot.dao.INoticeDAO">
+
+    <insert id="insertNotice" parameterType="com.meomureum.springboot.dto.NoticeDTO">
+        INSERT INTO NOTICE (
+            NOTICE_CODE, NOTICE_TITLE, NOTICE_CONTENT, 
+            NOTICE_CATEGORY, NOTICE_DATE
+        ) VALUES (
+            'NOTI' || LPAD(NOTICE_SEQ.NEXTVAL, 4, '0'),
+            #{notice_title},
+            #{notice_content},
+            #{notice_category},
+            SYSDATE
+        )
+    </insert>
+
+    <select id="getAllNotices" resultType="com.meomureum.springboot.dto.NoticeDTO">
+        SELECT * FROM NOTICE ORDER BY NOTICE_DATE DESC
+    </select>
+
+    <select id="getNoticeDetail" resultType="com.meomureum.springboot.dto.NoticeDTO">
+        SELECT * FROM NOTICE WHERE NOTICE_CODE = #{notice_code}
+    </select>
+
+</mapper>
