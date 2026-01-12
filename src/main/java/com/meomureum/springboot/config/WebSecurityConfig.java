@@ -36,7 +36,7 @@ public class WebSecurityConfig {
 				.loginProcessingUrl("/j_spring_security_check") // 위 폼태그 페이지의 action
 				.usernameParameter("j_username")
 				.passwordParameter("j_password")
-				.defaultSuccessUrl("/guest/SignUpComplete", true)
+				.defaultSuccessUrl("/loginSuccess", true)
 				.failureUrl("/guest/loginForm?error")
 				.permitAll()
 				);
@@ -44,7 +44,9 @@ public class WebSecurityConfig {
 		// 로그아웃
 		http.logout((logout) -> logout
 				.logoutUrl("/logout") // 매핑주소
-				.logoutSuccessUrl("/guest/SignUpComplete") // 로그아웃 성공 시 이동 페이지
+				.logoutSuccessUrl("/") // 로그아웃 성공 시 이동 페이지
+				.invalidateHttpSession(true)  // 세션 무효화
+			    .deleteCookies("JSESSIONID")  // 쿠키 삭제
 				.permitAll()
 				);
 		

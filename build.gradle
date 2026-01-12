@@ -46,6 +46,13 @@ dependencies {
 	implementation 'org.glassfish:jakarta.el:4.0.2'
 	implementation 'org.apache.tomcat.embed:tomcat-embed-jasper'
 }
+dependencies {
+    // Spring Security 메인 라이브러리
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    
+    // 타임리프에서 시큐리티 태그를 사용한다면 추가
+    implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
+}
 eclipse.wtp.facet {
 	facet name: 'jst.web', version: '5.0'
 }

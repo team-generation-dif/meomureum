@@ -102,22 +102,29 @@ document.getElementById("joinForm").addEventListener("submit", function(event) {
         return;
     }
 
-    // 이메일 검사
-    const email = document.querySelector("input[name='m_email']").value;
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        alert("올바른 이메일 형식이 아닙니다.");
-        event.preventDefault();
-        return;
+ // 이메일 검사 (정규식 수정 및 확실한 중단 처리)
+    const emailInput = document.querySelector("input[name='m_email']");
+    const emailValue = emailInput.value.trim();
+    const emailPattern = /^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*.[a-zA-Z]{2,3}$/i;
+    
+    // 이메일은 선택사항(nullable)이라면 값이 있을 때만 검사
+    if (emailValue !== "") {
+        if (!emailPattern.test(emailValue)) {
+            alert("올바른 이메일 형식이 아닙니다. (예: example@mail.com)");
+            emailInput.focus();
+            event.preventDefault(); // 폼 제출 방지
+            return false;
+        }
     }
 
-    // 전화번호 검사 (010-0000-0000 형식)
-    const tel = document.querySelector("input[name='m_tel']").value;
-    if (tel && !/^010-\d{4}-\d{4}$/.test(tel)) {
+    // 전화번호 검사 부분도 focus()를 넣어주면 좋습니다.
+    const telInput = document.querySelector("input[name='m_tel']");
+    if (!/^010-\d{4}-\d{4}$/.test(telInput.value)) {
         alert("전화번호는 010-0000-0000 형식으로 입력해주세요.");
+        telInput.focus();
         event.preventDefault();
-        return;
+        return false;
     }
-	
 	
 });
 
