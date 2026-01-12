@@ -120,7 +120,7 @@ public class BoardController {
         return "user/board/updateForm"; // updateForm.jsp (추가 필요)
     }
 
-    // 📍 게시글 수정 처리
+    // 📍 게시글 수정 처리(권한 체크 + 캐시 회피 파라미터)
     @PostMapping("/update")
     public String update(BoardDTO dto, @RequestParam("m_id") String m_id) {
         MemberDTO member = memberDAO.selectDAOById(m_id);
@@ -136,11 +136,13 @@ public class BoardController {
             boardDAO.updateDao(dto);
         }
 
-        return "redirect:/user/board/detail/" + dto.getB_code();
+        return "redirect:/user/board/detail/" + dto.getB_code() + "?t=" + System.currentTimeMillis();
     }
 
+  
 
-    // 📍 글 삭제
+
+    // 📍 글 삭제(권한 체크 + 캐시 회피 파라미터)
     @GetMapping("/delete/{b_code}")
     public String delete(@PathVariable("b_code") String b_code, @RequestParam("m_id") String m_id) {
         MemberDTO member = memberDAO.selectDAOById(m_id);
@@ -150,13 +152,12 @@ public class BoardController {
         String role = member.getM_auth();
 
         BoardDTO origin = boardDAO.selectDao(b_code);
-
         if (origin != null && loginUser != null &&
             (loginUser.equals(origin.getM_code()) || "ADMIN".equals(role))) {
             boardDAO.deleteDao(b_code);
         }
 
-        return "redirect:/user/board/list";
+        return "redirect:/user/board/list?t=" + System.currentTimeMillis();
     }
 
     // 📍 댓글 등록
@@ -184,7 +185,7 @@ public class BoardController {
         // 댓글 저장(DB)
         replyDAO.insertReply(dto);
 
-        return "redirect:/user/board/detail/" + dto.getB_code();
+        return "redirect:/user/board/detail/" + dto.getB_code() + "?t=" + System.currentTimeMillis();
     }
 
     // 📍 댓글 수정
@@ -214,8 +215,9 @@ public class BoardController {
             replyDAO.updateReply(dto);
         }
 
-        return "redirect:/user/board/detail/" + dto.getB_code();
+        return "redirect:/user/board/detail/" + dto.getB_code() + "?t=" + System.currentTimeMillis();
     }
+
               
 
     // 📍 댓글 삭제
@@ -240,7 +242,8 @@ public class BoardController {
             replyDAO.deleteReply(re_code);
         }
 
-        return "redirect:/user/board/detail/" + b_code;
+        return "redirect:/user/board/detail/" + b_code + "?t=" + System.currentTimeMillis();
+
     }
 }
 

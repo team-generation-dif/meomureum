@@ -57,14 +57,14 @@
         </table>
 
         <!-- 버튼 영역 -->
-        <div class="btn-area clearfix">
-            <div class="btn-left">
-                <a href="/user/board/list" class="btn btn-default">목록으로</a>
-            </div>
-            <div class="btn-right">
-                <input type="submit" value="수정 완료" class="btn btn-primary">
-            </div>
-        </div>
+      <div class="btn-area" style="margin-top:20px; display:flex; justify-content:space-between; max-width:800px;">
+    	<div>
+        	<a href="/user/board/list" class="btn btn-default">목록으로</a>
+    	</div>
+    	<div>
+        	<input type="submit" value="수정 완료" class="btn btn-primary">
+    	</div>
+	</div>
     </form>
 </div>
 
