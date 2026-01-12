@@ -2,6 +2,9 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.meomureum.springboot.dao.INoteDAO">
+	<select id="listDAOBySCode" resultType="com.meomureum.springboot.dto.NoteDTO">
+		select * from note where s_code = #{s_code} order by n_order asc
+	</select>
 	<insert id="insertDAO">
 		insert into note
 		 values('S'||lpad(schedule_seq.nextval,5,'0'),#{s_code},#{p_code,jdbcType=VARCHAR},#{n_title},#{n_content},sysdate,#{n_order})

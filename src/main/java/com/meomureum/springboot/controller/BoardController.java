@@ -33,7 +33,6 @@ public class BoardController {
     
     @Autowired
     private IReplyDAO replyDAO;
-
     
     // 📍 게시판 목록
     @GetMapping("/list")

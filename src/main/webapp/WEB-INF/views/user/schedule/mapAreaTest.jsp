@@ -51,13 +51,16 @@
 
 <script type="text/javascript" src="http://dapi.kakao.com/v2/maps/sdk.js?appkey=4a7565c6c1f5c232fc4970f7e8bd8d7f&libraries=services&autoload=false"></script>
 <script>
+	// 전역 변수로 선언(외부 접근을 위함)
+	var map;
+	
     kakao.maps.load(function() {
         var container = document.getElementById('map');
         var options = {
             center: new kakao.maps.LatLng(37.566826, 126.9786567),
             level: 3
         };
-        var map = new kakao.maps.Map(container, options);
+        map = new kakao.maps.Map(container, options);
         var ps = new kakao.maps.services.Places();
         var infowindow = new kakao.maps.InfoWindow({zIndex:1});
 
