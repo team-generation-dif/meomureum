@@ -68,10 +68,21 @@
 
     <!-- 7. 로그인/상세조회 (아이디 기준) -->
     <select id="selectDAOById" parameterType="string" resultType="com.meomureum.springboot.dto.MemberDTO">
-        SELECT 
-            *
-        FROM MEMBER
-        WHERE M_ID = #{m_id}
-    </select>
+    SELECT 
+        M_CODE AS m_code,
+        M_ID AS m_id,
+        M_PASSWD AS m_passwd,
+        M_NAME AS m_name,
+        M_NICK AS m_nick,
+        M_EMAIL AS m_email,
+        CREATED_AT AS created_at,
+        M_TEL AS m_tel,
+        M_GENDER AS m_gender,
+        M_GRADE AS m_grade,
+        M_AUTH AS m_auth
+    FROM MEMBER
+    WHERE M_ID = #{m_id}
+</select>
+
 
 </mapper>

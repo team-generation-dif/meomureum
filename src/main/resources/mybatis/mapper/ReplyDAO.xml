@@ -27,10 +27,39 @@
 
     <!-- 댓글 목록 조회 -->
     <select id="getReplies" parameterType="String" resultType="com.meomureum.springboot.dto.ReplyDTO">
+        SELECT 
+        r.RE_CODE,
+        r.RE_CONTENT,
+        r.CREATED_AT,
+        r.RE_SECRET,
+        r.RE_DEPTH,
+        r.B_CODE,
+        r.M_CODE,
+        m.M_NICK AS m_nick   <!-- 닉네임 가져오기 -->
+    FROM REPLY r
+    JOIN MEMBER m ON r.M_CODE = m.M_CODE
+    WHERE r.B_CODE = #{b_code}
+    ORDER BY r.CREATED_AT ASC
+    </select>
+    
+    <!-- 단일 댓글 조회 (수정/삭제 권한 검증용) -->   
+    <select id="getReplyByCode" parameterType="String" resultType="com.meomureum.springboot.dto.ReplyDTO">
         SELECT *
         FROM reply
-        WHERE b_code = #{b_code}
-        ORDER BY created_at ASC
+        WHERE re_code = #{re_code}
     </select>
-
+    
+    <!-- 댓글 수정 -->    
+    <update id="updateReply" parameterType="com.meomureum.springboot.dto.ReplyDTO">
+    	UPDATE reply
+    	SET re_content = #{re_content},
+    		re_secret = #{re_secret}
+    	WHERE re_code = #{re_code}    
+    </update>
+    
+    <!-- 댓글 삭제 -->
+    <delete id="deleteReply" parameterType="String">
+    	DELETE FROM reply WHERE re_code = #{re_code}
+    </delete>
+        
 </mapper>

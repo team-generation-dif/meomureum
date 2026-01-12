@@ -34,20 +34,43 @@
         <hr>
         <p>${board.b_content}</p>
     </div>
-
+    
+    <!-- 📍 게시글 수정/삭제 버튼 (게시글 전체에 대해 한 번만 표시) -->
+    <c:if test="${not empty pageContext.request.userPrincipal}">
+        <c:if test="${board.m_code eq sessionScope.m_code or pageContext.request.isUserInRole('ADMIN')}">
+            <div style="margin-top:20px; text-align:right;">
+                <a href="/user/board/updateForm/${board.b_code}?m_id=${pageContext.request.userPrincipal.name}" 
+                   class="btn btn-warning">게시글 수정</a>
+                <a href="/user/board/delete/${board.b_code}?m_id=${pageContext.request.userPrincipal.name}" 
+                   class="btn btn-danger">게시글 삭제</a>
+            </div>
+        </c:if>
+    </c:if>
+    
     <!-- 댓글 작성 -->
     <div class="reply-box">
         <h4>댓글 작성</h4>
-        <form method="post" action="/user/board/reply/write">
-            <input type="hidden" name="b_code" value="${board.b_code}">
-            <textarea name="re_content" rows="3" style="width:100%;" placeholder="댓글을 입력하세요" required></textarea>
-            <div style="margin-top:10px;">
-                <label><input type="checkbox" name="re_secret" value="Y"> 비밀댓글</label>
-            </div>
-            <div style="margin-top:10px; text-align:right;">
-                <input type="submit" value="댓글 등록" class="btn btn-sm btn-primary">
-            </div>
-        </form>
+        <c:choose>
+            <c:when test="${not empty pageContext.request.userPrincipal}">
+                <form method="post" action="/user/board/reply/write">
+                    <input type="hidden" name="b_code" value="${board.b_code}">
+                    <input type="hidden" name="m_id" value="${pageContext.request.userPrincipal.name}">
+                    <textarea name="re_content" rows="3" style="width:100%;" placeholder="댓글을 입력하세요" required></textarea>
+                    <div style="margin-top:10px;">
+                        <label><input type="checkbox" name="re_secret" value="Y"> 비밀댓글</label>
+                    </div>
+                    <div style="margin-top:10px; text-align:right;">
+                        <input type="submit" value="댓글 등록" class="btn btn-sm btn-primary">
+                    </div>
+                </form>
+            </c:when>
+            <c:otherwise>
+                <div class="alert alert-info" style="margin-top:10px;">
+                    댓글을 작성하려면 로그인하세요.
+                    <a href="/guest/loginForm" class="btn btn-xs btn-primary" style="margin-left:10px;">로그인</a>
+                </div>
+            </c:otherwise>
+        </c:choose>
     </div>
 
     <!-- 댓글 목록 -->
@@ -56,7 +79,7 @@
         <c:forEach var="reply" items="${replyList}">
             <div class="reply-item">
                 <div class="reply-meta">
-                    <strong>${reply.re_code}</strong> | 
+                    <strong>${reply.m_nick}</strong> |  
                     <fmt:formatDate value="${reply.created_at}" pattern="yyyy-MM-dd HH:mm"/>
                 </div>
                 <div class="reply-content">
@@ -69,6 +92,32 @@
                         </c:otherwise>
                     </c:choose>
                 </div>
+                
+				<!-- 📍 댓글 수정/삭제 버튼 (댓글마다 표시) -->
+                <c:if test="${not empty pageContext.request.userPrincipal}">
+                    <div class="reply-actions">
+                        <button type="button" class="btn btn-xs btn-warning" onclick="toggleEdit('${reply.re_code}')">수정</button>
+                        <a href="/user/board/reply/delete/${reply.re_code}/${board.b_code}?m_id=${pageContext.request.userPrincipal.name}"
+                           class="btn btn-xs btn-danger">삭제</a>
+                    </div>
+                </c:if>
+				           
+                <!-- 숨겨진 수정 폼 -->
+                <div id="editForm-${reply.re_code}" style="display:none; margin-top:10px;">
+                    <form method="post" action="/user/board/reply/update">
+                        <input type="hidden" name="re_code" value="${reply.re_code}">
+                        <input type="hidden" name="b_code" value="${board.b_code}">
+                        <input type="hidden" name="m_id" value="${pageContext.request.userPrincipal.name}">
+                        <textarea name="re_content" rows="2" style="width:100%">${reply.re_content}</textarea>
+                        <div style="margin-top:5px;">
+                            <label><input type="checkbox" name="re_secret" value="Y"
+                                <c:if test="${reply.re_secret eq 'Y'}">checked</c:if>> 비밀댓글</label>
+                        </div>
+                        <div style="margin-top:5px; text-align:right;">
+                            <input type="submit" value="댓글 수정" class="btn btn-sm btn-primary">
+                        </div>
+                    </form>
+                </div>
             </div>
         </c:forEach>
     </div>
@@ -78,6 +127,13 @@
         <a href="/user/board/list" class="btn btn-default">목록으로</a>
     </div>
 </div>
+
+<script>
+function toggleEdit(reCode) {
+    const form = document.getElementById("editForm-" + reCode);
+    form.style.display = (form.style.display === "none") ? "block" : "none";
+}
+</script>
 
 </body>
 </html>

@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.meomureum.springboot.dao.IMemberDAO;
 import com.meomureum.springboot.dto.MemberDTO;
 
+import jakarta.servlet.http.HttpSession;
+
 @Controller
 @RequestMapping("/guest")
 public class MemberController {
@@ -122,4 +124,33 @@ public class MemberController {
     public String signUpComplete() {
         return "guest/SignUpComplete";
     }
+    
+    // 10. 로그인 처리
+    @RequestMapping(value = "/login", method = RequestMethod.POST)
+    public String login(@RequestParam("m_id") String m_id,
+                        @RequestParam("m_passwd") String m_passwd,
+                        HttpSession session,
+                        Model model) {
+    // DB에서 회원 정보 조회
+    	MemberDTO member = memberDAO.selectDAOById(m_id);
+
+
+        if (member != null && passwordEncoder.matches(m_passwd, member.getM_passwd())) {
+            // 로그인 성공 → 세션에 값 저장
+            session.setAttribute("m_code", member.getM_code());   // 댓글 작성자 식별용
+            session.setAttribute("role", member.getM_auth());     // "USER" / "ADMIN"
+            return "redirect:/user/board/list"; // 로그인 후 게시판으로 이동
+        } else {
+    // 로그인 실패
+            model.addAttribute("error", "아이디 또는 비밀번호가 올바르지 않습니다.");
+            return "guest/loginForm";
+        }
+    }
+
+    // 11. 로그아웃 처리
+    @RequestMapping(value = "/logout", method = RequestMethod.GET)
+    public String logout(HttpSession session) {
+        session.invalidate(); // 세션 전체 삭제
+        return "redirect:/guest/loginForm";
+    }    
 }
