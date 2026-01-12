@@ -1,14 +1,19 @@
 package com.meomureum.springboot.controller;
 
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import com.meomureum.springboot.dao.IMemberDAO;
 import com.meomureum.springboot.dao.INoteDAO;
 import com.meomureum.springboot.dao.IPlaceDAO;
 import com.meomureum.springboot.dao.IRouteDAO;
 import com.meomureum.springboot.dao.IScheduleDAO;
+import com.meomureum.springboot.dto.MemberDTO;
 import com.meomureum.springboot.dto.NoteDTO;
 import com.meomureum.springboot.dto.PlaceDTO;
 import com.meomureum.springboot.dto.RouteDTO;
@@ -27,6 +32,8 @@ public class ScheduleController {
 	IRouteDAO routeDAO;
 	@Autowired
 	IPlaceDAO placeDAO;
+	@Autowired
+	IMemberDAO memberDAO;
 	
 	
 	@RequestMapping("/user/schedule/scheduleForm")
@@ -39,11 +46,16 @@ public class ScheduleController {
 	@RequestMapping("/user/schedule/schedule")
 	public String schedule(Model model, HttpServletRequest request) {
 		
+		String m_id = request.getParameter("m_id");
 		String p_name = request.getParameter("p_name");
 		String s_start = request.getParameter("s_start");
 		String s_end = request.getParameter("s_end");
 		String mode = "new";
 		
+		// 세션 저장된 m_id로 m_code 가져오기
+		MemberDTO memberDTO = memberDAO.selectDAOById(m_id);
+		
+		model.addAttribute("member", memberDTO); // ${member.m_code}로 m_code 전달
 		model.addAttribute("p_name", p_name);
 		model.addAttribute("s_start", s_start);
 		model.addAttribute("s_end", s_end);
@@ -52,11 +64,47 @@ public class ScheduleController {
 		return "user/schedule/schedule";
 	}
 	
+	// 내 여행 계획 목록
+	@RequestMapping("/user/mypage/mySchedule")
+	public String mySchedule(Model model, HttpServletRequest request) {
+		
+		String m_id = request.getParameter("m_id");
+		
+		model.addAttribute("lists", scheduleDAO.listDAOById(m_id));
+		
+		return "user/mypage/mySchedule";
+	}
+	
+	// 여행 계획 수정으로 연결
+	@RequestMapping("/user/schedule/updateSchedule")
+	public String updateSchedule(Model model, HttpServletRequest request) {
+		
+		String s_code = request.getParameter("s_code");
+		ScheduleDTO scheduleDTO = scheduleDAO.selectDAO(s_code);
+		
+		long diff = ChronoUnit.DAYS.between(
+		    LocalDate.parse(scheduleDTO.getS_start()), 
+		    LocalDate.parse(scheduleDTO.getS_end())
+		) + 1;
+		model.addAttribute("dayDiff", diff);
+		
+		model.addAttribute("noteDTO",noteDAO.listDAOBySCode(s_code));
+		model.addAttribute("routeDTO",routeDAO.listDAOBySCode(s_code));
+		
+		String mode = "update";
+		
+		model.addAttribute("scheduleDTO", scheduleDTO);
+		model.addAttribute("mode", mode);
+		
+		return "user/schedule/schedule";
+	}
+	
 	// 여행 계획 커밋하기
 	@RequestMapping("/user/schedule/insertSchedule")
-	public String insertSchedule(ScheduleDTO dto, HttpServletRequest request) {
+	public String insertSchedule(ScheduleDTO dto, HttpServletRequest request, Model model) {
 		// 파라미터 받아오기
 		String mode = request.getParameter("mode");
+		String m_code = request.getParameter("m_code");
 		String s_code = "";
 		
 		// mode=="update"라면 1부터 진행, mode=="new"라면 3부터 진행
