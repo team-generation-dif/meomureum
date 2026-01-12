@@ -12,5 +12,6 @@ public class ReplyDTO {
     private int re_depth;         // 댓글 깊이
     private String b_code;        // 게시글 코드
     private String m_code;        // 댓글 작성자
+    private String m_nick;   // 작성자 닉네임 ✅ 추가
 }
 

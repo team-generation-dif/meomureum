@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.*;
 import com.meomureum.springboot.dao.IMemberDAO;
 import com.meomureum.springboot.dto.MemberDTO;
 
+import jakarta.servlet.http.HttpSession;
+
 @Controller
 public class MemberController {
 
@@ -60,7 +62,7 @@ public class MemberController {
         }
         return "guest/idCheck";
     }
-
+  
     @RequestMapping("/guest/SignUpComplete")
     public String signUpComplete() { return "guest/SignUpComplete"; }
 
