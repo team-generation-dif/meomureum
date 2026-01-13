@@ -13,4 +13,6 @@ public class BoardDTO {
 	private String b_category;
 	private Date created_at;
 	private String m_code;	
+	public String getM_code() { return m_code; }
+	public void setM_code(String m_code) { this.m_code = m_code; }
 }

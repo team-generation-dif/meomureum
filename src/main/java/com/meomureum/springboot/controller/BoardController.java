@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,6 +25,7 @@ import com.meomureum.springboot.dto.MemberDTO;
 import com.meomureum.springboot.dto.ReplyDTO;
 
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 
 @Controller
@@ -56,22 +58,38 @@ public class BoardController {
     }
 
 
-    // 📍 게시글 상세 조회 (조회수 증가 포함)
+    // 📍 게시글 상세 조회(조회수 증가 포함)
     @GetMapping("/detail/{b_code}")
-    public String detail(@PathVariable("b_code") String b_code, Model model, HttpServletResponse resp) {
+    public String detail(@PathVariable("b_code") String b_code,
+                         Model model,
+                         HttpServletResponse resp,
+                         Authentication authentication,
+                         HttpSession session) {
+        // 캐시 방지 헤더
         resp.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
         resp.setHeader("Pragma", "no-cache");
         resp.setDateHeader("Expires", 0);
 
+        // 데이터 로드
         boardDAO.increaseViewCount(b_code);
-        List<FileuploadDTO> fileList = fileuploadDAO.selectFilesByTarget(b_code);
-        model.addAttribute("fileList", fileList);
-
         BoardDTO board = boardDAO.selectDao(b_code);
         model.addAttribute("board", board);
 
+        List<FileuploadDTO> fileList = fileuploadDAO.selectFilesByTarget(b_code);
+        model.addAttribute("fileList", fileList);
+
         List<ReplyDTO> replyList = replyDAO.getReplies(b_code);
         model.addAttribute("replyList", replyList);
+
+        // 로그인 사용자 세션 저장
+        if (authentication != null) {
+            String m_id = authentication.getName();
+            MemberDTO member = memberDAO.selectDAOById(m_id);
+            if (member != null) {
+                session.setAttribute("m_code", member.getM_code());   // 로그인 사용자 코드
+                session.setAttribute("loginRole", member.getM_auth()); // 예: USER, ADMIN
+            }
+        }
 
         return "user/board/detail";
     }
@@ -105,10 +123,13 @@ public class BoardController {
     
     // 📍 글 작성 처리
     @PostMapping("/write")
-    public String write(BoardDTO dto) {
-        // 이제 dto.getB_content() 안에는 글과 <img src="..."> 태그가 섞여서 들어옵니다.
-        boardDAO.insertDao(dto); 
-        return "redirect:/user/board/list";
+    public String write(BoardDTO dto, Authentication authentication) {
+        // 이제 dto.getB_content() 안에는 글과 <img src="..."> 태그가 섞여서 들어옵니다.   		
+		String m_id = authentication.getName();
+		MemberDTO memberDTO = memberDAO.selectDAOById(m_id);
+		dto.setM_code(memberDTO.getM_code()); // 작성자 코드 주입
+    	boardDAO.insertDao(dto); 
+    	return "redirect:/user/board/list?t=" + System.currentTimeMillis();
     }
 
 
@@ -120,31 +141,40 @@ public class BoardController {
         return "user/board/updateForm"; // updateForm.jsp (추가 필요)
     }
 
-    // 📍 게시글 수정 처리(권한 체크 + 캐시 회피 파라미터)
+    // 📍 글 수정 처리
     @PostMapping("/update")
-    public String update(BoardDTO dto, @RequestParam("m_id") String m_id) {
+    public String update(BoardDTO dto, Authentication authentication) {
+        String m_id = authentication.getName();
         MemberDTO member = memberDAO.selectDAOById(m_id);
         if (member == null) return "redirect:/guest/loginForm";
 
         String loginUser = member.getM_code();
         String role = member.getM_auth();
-
+    // 원본 게시글 조회
         BoardDTO origin = boardDAO.selectDao(dto.getB_code());
         if (origin == null) return "redirect:/user/board/list";
 
-        if (loginUser != null && (loginUser.equals(origin.getM_code()) || "ADMIN".equals(role))) {
-            boardDAO.updateDao(dto);
+        System.out.println("[BoardController] loginUser=" + loginUser +
+                           ", origin.m_code=" + origin.getM_code() +
+                           ", role=" + role);
+
+        if (loginUser != null && (loginUser.equals(origin.getM_code()) ||
+                                  role.equalsIgnoreCase("ADMIN") ||
+                                  role.equals("ROLE_ADMIN"))) {
+            int affected = boardDAO.updateDao(dto);
+            System.out.println("[BoardController] update 실행됨, 영향 행 수 = " + affected);
+        } else {
+            System.out.println("[BoardController] update 실패: 권한 없음");
         }
 
         return "redirect:/user/board/detail/" + dto.getB_code() + "?t=" + System.currentTimeMillis();
     }
 
-  
 
-
-    // 📍 글 삭제(권한 체크 + 캐시 회피 파라미터)
+    // 📍 게시글 삭제 (권한 체크 + 영향 행 수 로그)
     @GetMapping("/delete/{b_code}")
-    public String delete(@PathVariable("b_code") String b_code, @RequestParam("m_id") String m_id) {
+    public String delete(@PathVariable("b_code") String b_code, Authentication authentication) {
+        String m_id = authentication.getName();
         MemberDTO member = memberDAO.selectDAOById(m_id);
         if (member == null) return "redirect:/guest/loginForm";
 
@@ -152,99 +182,87 @@ public class BoardController {
         String role = member.getM_auth();
 
         BoardDTO origin = boardDAO.selectDao(b_code);
-        if (origin != null && loginUser != null &&
-            (loginUser.equals(origin.getM_code()) || "ADMIN".equals(role))) {
-            boardDAO.deleteDao(b_code);
+        if (origin == null) return "redirect:/user/board/list";
+
+        System.out.println("[BoardController] loginUser=" + loginUser +
+                           ", origin.m_code=" + origin.getM_code() +
+                           ", role=" + role);
+
+        if (loginUser != null && (loginUser.equals(origin.getM_code()) ||
+                                  role.equalsIgnoreCase("ADMIN") ||
+                                  role.equals("ROLE_ADMIN"))) {
+            int affected = boardDAO.deleteDao(b_code);
+            System.out.println("[BoardController] delete 실행됨, 영향 행 수 = " + affected);
+        } else {
+            System.out.println("[BoardController] delete 실패: 권한 없음");
         }
 
         return "redirect:/user/board/list?t=" + System.currentTimeMillis();
     }
 
+
+
     // 📍 댓글 등록
     @PostMapping("/reply/write")
-    public String writeReply(ReplyDTO dto, @RequestParam("m_id") String m_id) {
-        // 로그인한 회원 조회
+    public String writeReply(ReplyDTO dto, Authentication authentication) {
+        String m_id = authentication.getName();
         MemberDTO member = memberDAO.selectDAOById(m_id);
-        if (member == null) {
-            // 아이디가 없으면 로그인 페이지로 이동
-            return "redirect:/guest/loginForm";
-        }
-        
-        // 작성자 코드 주입
-        dto.setM_code(member.getM_code());
-
-        // 비밀댓글 체크박스 미선택 시 기본값 처리
-        if (dto.getRe_secret() == null) {
-            dto.setRe_secret("N");
-        }
-
-        // 댓글 깊이 기본값
+        dto.setM_code(member.getM_code()); // 작성자 코드 주입 (필수)
+        if (dto.getRe_secret() == null) dto.setRe_secret("N");
         dto.setRe_depth(0);
-        
-
-        // 댓글 저장(DB)
         replyDAO.insertReply(dto);
-
         return "redirect:/user/board/detail/" + dto.getB_code() + "?t=" + System.currentTimeMillis();
     }
 
     // 📍 댓글 수정
     @PostMapping("/reply/update")
-    public String updateReply(ReplyDTO dto, @RequestParam("m_id") String m_id) {
+    public String updateReply(ReplyDTO dto, Authentication authentication) {
+        String m_id = authentication.getName();
         MemberDTO member = memberDAO.selectDAOById(m_id);
-        if (member == null) {
-            return "redirect:/guest/loginForm";
-        }
-   	
+        if (member == null) return "redirect:/guest/loginForm";
+
         String loginUser = member.getM_code();
-        String role = member.getM_auth(); // 예: "USER" / "ADMIN"
+        String role = member.getM_auth();
 
-        // 원본 댓글 조회
         ReplyDTO origin = replyDAO.getReplyByCode(dto.getRe_code());
-        if (origin == null) {
-            return "redirect:/user/board/detail/" + dto.getB_code();
-        }
+        if (origin == null) return "redirect:/user/board/detail/" + dto.getB_code();
 
-        // 비밀댓글 체크박스 기본값 처리
-        if (dto.getRe_secret() == null) {
-            dto.setRe_secret("N");
-        }
+        if (dto.getRe_secret() == null) dto.setRe_secret("N");
 
-        // 작성자 본인 또는 관리자만 수정 가능
-        if (loginUser != null && (loginUser.equals(origin.getM_code()) || "ADMIN".equals(role))) {
+        if (loginUser != null && (loginUser.equals(origin.getM_code()) ||
+                                  role.equalsIgnoreCase("ADMIN") ||
+                                  role.equals("ROLE_ADMIN"))) {
             replyDAO.updateReply(dto);
         }
 
         return "redirect:/user/board/detail/" + dto.getB_code() + "?t=" + System.currentTimeMillis();
     }
 
-              
 
     // 📍 댓글 삭제
     @GetMapping("/reply/delete/{re_code}/{b_code}")
     public String deleteReply(@PathVariable("re_code") String re_code,
                               @PathVariable("b_code") String b_code,
-                              @RequestParam("m_id") String m_id) {
+                              Authentication authentication) {
+        String m_id = authentication.getName();
         MemberDTO member = memberDAO.selectDAOById(m_id);
-        if (member == null) {
-            return "redirect:/guest/loginForm";
-        }
+        if (member == null) return "redirect:/guest/loginForm";
 
         String loginUser = member.getM_code();
         String role = member.getM_auth();
 
-        // 원본 댓글 조회
         ReplyDTO origin = replyDAO.getReplyByCode(re_code);
 
-        // 작성자 본인 또는 관리자만 삭제 가능
         if (origin != null && loginUser != null &&
-            (loginUser.equals(origin.getM_code()) || "ADMIN".equals(role))) {
+            (loginUser.equals(origin.getM_code()) ||
+             role.equalsIgnoreCase("ADMIN") ||
+             role.equals("ROLE_ADMIN"))) {
             replyDAO.deleteReply(re_code);
         }
 
         return "redirect:/user/board/detail/" + b_code + "?t=" + System.currentTimeMillis();
-
     }
+
 }
 
 

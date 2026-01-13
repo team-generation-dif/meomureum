@@ -17,7 +17,8 @@
     .reply-box { margin-top: 40px; }
     .reply-item { border-bottom: 1px solid #eee; padding: 10px 0; }
     .reply-meta { font-size: 13px; color: #888; margin-bottom: 5px; }
-    .reply-content { font-size: 15px; }
+    .reply-content { font-size: 15px; flex-grow: 1; }
+    .reply-actions { margin-left: 10px; }
 </style>
 </head>
 <body>
@@ -35,18 +36,20 @@
         <p>${board.b_content}</p>
     </div>
     
-    <!-- 📍 게시글 수정/삭제 버튼 (게시글 전체에 대해 한 번만 표시) -->
-    <c:if test="${not empty pageContext.request.userPrincipal}">
-        <c:if test="${board.m_code eq sessionScope.m_code or pageContext.request.isUserInRole('ADMIN')}">
-            <div style="margin-top:20px; text-align:right;">
-                <a href="/user/board/updateForm/${board.b_code}?m_id=${pageContext.request.userPrincipal.name}" 
-                   class="btn btn-warning">게시글 수정</a>
-                <a href="/user/board/delete/${board.b_code}?m_id=${pageContext.request.userPrincipal.name}" 
-                   class="btn btn-danger">게시글 삭제</a>
-            </div>
-        </c:if>
+    <!-- 게시글 수정/삭제 버튼 -->
+    <c:if test="${board.m_code eq sessionScope.m_code or sessionScope.loginRole eq 'ADMIN'}">
+        <div style="margin-top:20px; text-align:right;">
+            <a href="/user/board/updateForm/${board.b_code}" class="btn btn-warning">게시글 수정</a>
+            <a href="/user/board/delete/${board.b_code}" class="btn btn-danger">게시글 삭제</a>
+        </div>
     </c:if>
     
+    <!-- 게시글 신고 버튼 -->
+    <button type="button" class="btn btn-danger btn-sm"
+            onclick="openReportForm('BOARD', '${board.b_code}')">
+        게시글 신고
+    </button>
+
     <!-- 댓글 작성 -->
     <div class="reply-box">
         <h4>댓글 작성</h4>
@@ -54,7 +57,6 @@
             <c:when test="${not empty pageContext.request.userPrincipal}">
                 <form method="post" action="/user/board/reply/write">
                     <input type="hidden" name="b_code" value="${board.b_code}">
-                    <input type="hidden" name="m_id" value="${pageContext.request.userPrincipal.name}">
                     <textarea name="re_content" rows="3" style="width:100%;" placeholder="댓글을 입력하세요" required></textarea>
                     <div style="margin-top:10px;">
                         <label><input type="checkbox" name="re_secret" value="Y"> 비밀댓글</label>
@@ -82,32 +84,46 @@
                     <strong>${reply.m_nick}</strong> |  
                     <fmt:formatDate value="${reply.created_at}" pattern="yyyy-MM-dd HH:mm"/>
                 </div>
-                <div class="reply-content">
-                    <c:choose>
-                        <c:when test="${reply.re_secret eq 'Y'}">
-                            <em>비밀댓글입니다.</em>
-                        </c:when>
-                        <c:otherwise>
-                            ${reply.re_content}
-                        </c:otherwise>
-                    </c:choose>
-                </div>
-                
-				<!-- 📍 댓글 수정/삭제 버튼 (댓글마다 표시) -->
-                <c:if test="${not empty pageContext.request.userPrincipal}">
-                    <div class="reply-actions">
-                        <button type="button" class="btn btn-xs btn-warning" onclick="toggleEdit('${reply.re_code}')">수정</button>
-                        <a href="/user/board/reply/delete/${reply.re_code}/${board.b_code}?m_id=${pageContext.request.userPrincipal.name}"
-                           class="btn btn-xs btn-danger">삭제</a>
+
+                <!-- 댓글 내용 + 버튼 나란히 -->
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div class="reply-content">
+                        <c:choose>
+                            <c:when test="${reply.re_secret eq 'Y'}">
+                                <em>비밀댓글입니다.</em>
+                            </c:when>
+                            <c:otherwise>
+                                ${reply.re_content}
+                            </c:otherwise>
+                        </c:choose>
                     </div>
-                </c:if>
-				           
+
+                    <!-- 버튼 영역 -->
+                    <div class="reply-actions">
+                        <button type="button" class="btn btn-primary btn-xs"
+                                onclick="toggleEdit('${reply.re_code}')">수정</button>
+
+                        <button type="button" class="btn btn-danger btn-xs"
+        						onclick="deleteReply('${reply.re_code}', '${board.b_code}')">삭제</button>
+
+						<script>
+						function deleteReply(reCode, bCode) {
+    						if(confirm("정말 이 댓글을 삭제하시겠습니까?")) {
+        						location.href = "/user/board/reply/delete/" + reCode + "/" + bCode;
+   							 }
+						}
+						</script>
+						                                
+                        <button type="button" class="btn btn-warning btn-xs"
+                                onclick="openReportForm('REPLY', '${reply.re_code}')">댓글 신고</button>
+                    </div>
+                </div>
+
                 <!-- 숨겨진 수정 폼 -->
                 <div id="editForm-${reply.re_code}" style="display:none; margin-top:10px;">
                     <form method="post" action="/user/board/reply/update">
                         <input type="hidden" name="re_code" value="${reply.re_code}">
                         <input type="hidden" name="b_code" value="${board.b_code}">
-                        <input type="hidden" name="m_id" value="${pageContext.request.userPrincipal.name}">
                         <textarea name="re_content" rows="2" style="width:100%">${reply.re_content}</textarea>
                         <div style="margin-top:5px;">
                             <label><input type="checkbox" name="re_secret" value="Y"
@@ -122,6 +138,30 @@
         </c:forEach>
     </div>
 
+    <!-- 신고 모달 -->
+    <div id="reportModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <h4>신고하기</h4>
+            <form id="reportForm" method="post" action="/report/submit">
+                <input type="hidden" name="rep_category" id="rep_category">
+                <input type="hidden" name="target_code" id="target_code">
+
+                <div class="form-group">
+                    <label for="rep_title">제목</label>
+                    <input type="text" name="rep_title" id="rep_title" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="rep_content">내용</label>
+                    <textarea name="rep_content" id="rep_content" class="form-control" required></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-danger">신고 제출</button>
+                <button type="button" class="btn btn-secondary" onclick="closeReportForm()">취소</button>
+            </form>
+        </div>
+    </div>
+
     <!-- 목록으로 버튼 -->
     <div style="margin-top: 30px; text-align: right;">
         <a href="/user/board/list" class="btn btn-default">목록으로</a>
@@ -132,6 +172,16 @@
 function toggleEdit(reCode) {
     const form = document.getElementById("editForm-" + reCode);
     form.style.display = (form.style.display === "none") ? "block" : "none";
+}
+
+function openReportForm(category, code) {
+    document.getElementById("rep_category").value = category;
+    document.getElementById("target_code").value = code;
+    document.getElementById("reportModal").style.display = "block";
+}
+
+function closeReportForm() {
+    document.getElementById("reportModal").style.display = "none";
 }
 </script>
 

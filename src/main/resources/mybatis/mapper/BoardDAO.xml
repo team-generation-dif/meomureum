@@ -7,7 +7,14 @@
 
     <!-- 게시판 목록 -->
     <select id="listDao" resultType="com.meomureum.springboot.dto.BoardDTO">
-        SELECT * FROM board ORDER BY b_code DESC
+        SELECT b_code,
+        b_title,
+        b_content,
+        b_view,
+        b_category,
+        created_at,
+        m_code
+        FROM board ORDER BY b_code DESC
     </select>
 
     <!-- 게시글 상세 조회 -->
