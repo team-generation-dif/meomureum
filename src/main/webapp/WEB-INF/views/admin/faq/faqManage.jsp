@@ -47,10 +47,10 @@
             <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
             
             <select name="faq_category" class="form-control" style="width: 150px;">
-                <option value="회원">회원</option>
-                <option value="예약">예약</option>
-                <option value="결제">결제</option>
-                <option value="기타">기타</option>
+                <option value="회원가입">회원가입</option>
+                <option value="등급">등급</option>
+                <option value="커뮤니티">커뮤니티</option>
+                <option value="신고">신고</option>
             </select>
             
             <input type="text" name="faq_title" class="form-control" placeholder="질문 내용을 입력하세요" required>
