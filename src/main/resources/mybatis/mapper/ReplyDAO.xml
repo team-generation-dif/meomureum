@@ -44,9 +44,9 @@
     
     <!-- 단일 댓글 조회 (수정/삭제 권한 검증용) -->   
     <select id="getReplyByCode" parameterType="String" resultType="com.meomureum.springboot.dto.ReplyDTO">
-        SELECT *
-        FROM reply
-        WHERE re_code = #{re_code}
+        SELECT re_code, b_code, re_content, re_secret, re_depth, created_at, m_code
+    	FROM reply
+    	WHERE re_code = #{re_code}
     </select>
     
     <!-- 댓글 수정 -->    
