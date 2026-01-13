@@ -7,7 +7,7 @@
 	</select>
 	<insert id="insertDAO">
 		insert into route
-		 values('R'||lpad(schedule_seq.nextval,6,'0'),#{p_code,jdbcType=VARCHAR},#{s_code},#{r_order},#{r_memo},#{r_day})
+		 values('R'||lpad(schedule_seq.nextval,6,'0'),#{p_code},#{s_code},#{r_order},#{r_memo},#{r_day})
 	</insert>
 	<delete id="deleteDAO">
 		delete from route where s_code = #{s_code}

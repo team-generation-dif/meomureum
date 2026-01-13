@@ -44,7 +44,7 @@
 	}
 	
 	.nav-item {
-	    display: block;
+		display: block;
 	    width: calc(100% - 30px);
 	    margin: 5px 15px;
 	    padding: 12px;
@@ -72,10 +72,10 @@
 	}
 </style>
 <meta charset="UTF-8">
-<title>Insert title here</title>
+<title>머무름 - 당신의 여행 계획</title>
 </head>
 <body>
-<%-- 	<%@ include file="../../guest/header.jsp" %> --%>
+ 	<%@ include file="../../guest/header.jsp" %>
 	<div class="container">
 		<div id="sidebar" class="pane">
 	        <%@ include file="sidebar.jsp" %>
@@ -95,6 +95,7 @@
 							<input type="hidden" name="s_start" id="s_start" value="${s_start}">
 							<input type="hidden" name="s_end" id="s_end" value="${s_end}">
 							<input type="hidden" name="m_code" value="${member.m_code}">
+							<input type="hidden" name="p_name" value="${p_name}">
 						</div>
 					</div>
 					<!-- 노트 영역 -->
@@ -152,8 +153,8 @@
 					               		<ul id="day_${dayNum}_list" class="route_list">
 										<c:forEach var="route" items="${routeDTO}">
 											<c:if test="${route.r_day == dayNum}">
-												<div class="r_item">
-													<strong>${route.place_name}</strong>
+												<li class="r_item">
+													<strong>${route.p_place}</strong>
 													<input type="button" value="▲" onclick="moveUpNote(this); setOrder();">
 													<input type="button" value="▼" onclick="moveDownNote(this); setOrder();">
 													<br>
@@ -162,13 +163,13 @@
 											        <input type="hidden" name="r_day" value="${route.r_day}">
 											        <input type="hidden" name="r_order" value="${route.r_order}">
 											        
-											        <input type="hidden" name="api_code" value="${route.id}">
-											        <input type="hidden" name="p_place" value="${route.place_name}">
-											        <input type="hidden" name="p_category" value="${route.category_group_name}">
-											        <input type="hidden" name="p_lat" value="${route.y}">
-											        <input type="hidden" name="p_lon" value="${route.x}">
-											        <input type="hidden" name="p_addr" value="${route.road_address_name || place.address_name}">
-										        </div>
+											        <input type="hidden" name="api_code" value="${route.api_code}">
+											        <input type="hidden" name="p_place" value="${route.p_place}">
+											        <input type="hidden" name="p_category" value="${route.p_category}">
+											        <input type="hidden" name="p_lat" value="${route.p_lat}">
+											        <input type="hidden" name="p_lon" value="${route.p_lon}">
+											        <input type="hidden" name="p_addr" value="${route.p_addr}">
+										        </li>
 									        </c:if>
 										</c:forEach>
 										</ul>
@@ -195,8 +196,8 @@
 			</form>
 			
 			<script>
-				const start = "${s_start}";
-			    const end = "${s_end}";
+				const c_start = "${mode == 'update' ? scheduleDTO.s_start : s_start}";
+			    const c_end = "${mode == 'update' ? scheduleDTO.s_end : s_end}";
 				
 			    flatpickr("#dateSchedule", {
 			        local: "ko",        // 한국어 설정
@@ -205,7 +206,7 @@
 			        dateFormat: "Y-m-d", // 데이터 형식
 			        minDate: "today",    // 오늘 이전 날짜 선택 불가
 			     	//  초기값 설정: 시작일과 종료일이 모두 있을 경우 달력에 표시
-			        defaultDate: (start && end) ? [start, end] : [],
+			        defaultDate: (c_start && c_end) ? [c_start, c_end] : [],
 			        onClose: function(selectedDates, dateStr, instance) {
 			            // 날짜가 두 개 모두 선택되었을 때 실행
 			            if (selectedDates.length === 2) {
@@ -213,11 +214,22 @@
 			                document.getElementById("s_start").value = instance.formatDate(selectedDates[0], "Y-m-d");
 			                document.getElementById("s_end").value = instance.formatDate(selectedDates[1], "Y-m-d");
 			                newRoute();
+			                
+			                if (typeof window.refreshMapList === 'function') {
+			                    window.refreshMapList();
+			                }
 			            }
 			        },
 			        onReady: function(selectedDates, dateStr, instance) {
 			            if (selectedDates.length === 2) {
-			                newRoute();
+			                // 수정 모드일 때는 이미 HTML이 그려져 있으므로 
+			                // 새로 생성하는 대신 기존 ul들에 Sortable만 바인딩
+			                const lists = document.querySelectorAll('.route_list');
+			                lists.forEach(list => {
+			                    if(list.id) makeSortable(list.id);
+			                });
+			                // 초기 순서 세팅
+			                setOrder();
 			            }
 			        }
 			    });
@@ -231,7 +243,7 @@
 	</div>
 	<!-- 카카오맵 대응 리사이저 설정(지도 깨짐 방지), 사이드바|리사이저|스케쥴러|리사이저|지도 구조로 나눈다. -->
 	<script>
-		// 문서가 로딩되면 적용되는 스크립트
+		// 문서가 로딩되면 적용되는 스크립트 (사이드바 초기화)
 		document.addEventListener("DOMContentLoaded", function() {
 		    initResizer("resizer-sidebar", "sidebar", "left-to-right"); // 왼쪽에서 오른쪽으로 조절
 		    initResizer("resizer-map", "right-side", "right-to-left"); // 스케줄러 너비 조절

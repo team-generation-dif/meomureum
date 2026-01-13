@@ -1,17 +1,68 @@
-// 제출 전 순서(n_order, r_order)를 1, 2, 3...으로 채워주는 함수
+
+// 1. 전체 순서 및 사이드바 동기화 통합 함수
+// 제출 전이나 조작 후 순서(n_order, r_order)를 1, 2, 3...으로 채워주는 함수
 function setOrder() {
-    const n_orders = document.querySelectorAll('input[name="n_order"]');
-    n_orders.forEach((order, index) => {
-        order.value = index + 1;
-    });
-    
-    const dayLists = document.querySelectorAll('ul[id$="_list"]');
-    dayLists.forEach((list) => {
-	    const r_orders = list.querySelectorAll('input[name="r_order"]');
-	    r_orders.forEach((order, index) => {
-	        order.value = index + 1;
-	    });
-    });
+    // A. 노트 순서 세팅 및 사이드바 갱신
+    const notes = document.querySelectorAll('.n_item');
+    const sidebarNotes = document.getElementById('sidebar-notes');
+	// 노트가 존재할 경우만 작동
+    if (sidebarNotes) {
+        sidebarNotes.innerHTML = ''; // 사이드바 초기화
+		// 노트 순서에 따라 번호 지정
+        notes.forEach((note, index) => {
+            // hidden 필드 값 세팅
+            const orderInput = note.querySelector('input[name="n_order"]');
+            if (orderInput) {
+				orderInput.value = index + 1;
+            }
+            // 본문 ID 재설정 (스크롤 목적지 고정)
+            note.id = `note_section_${index}`;
+            
+            // 사이드바 버튼 생성 및 추가
+            const titleVal = note.querySelector('input[name="n_title"]').value;
+            const navBtn = createNavButton(titleVal, () => scrollToNote(index));
+            sidebarNotes.appendChild(navBtn);
+        });
+    }
+
+    // B. 루트(일차) 순서 세팅 및 사이드바 갱신
+    const days = document.querySelectorAll('.r_day');
+    const sidebarRoutes = document.getElementById('sidebar-routes');
+	// 이것 역시 루트가 있을 경우 작동
+    if (sidebarRoutes) {
+        sidebarRoutes.innerHTML = ''; // 사이드바 초기화
+		// 일차 별로 나누기 
+        days.forEach((day, index) => {
+            const dayNum = index + 1;
+            // 본문 ID 재설정
+            day.id = `day_section_${dayNum}`;
+            
+            // 일차 별로 아이템들 순서 세팅
+            const r_orders = day.querySelectorAll('input[name="r_order"]');
+            r_orders.forEach((order, rIdx) => {
+                order.value = rIdx + 1;
+            });
+
+            // 사이드바 버튼 생성 및 추가
+            const navBtn = createNavButton(`Day ${dayNum}`, () => scrollToDay(dayNum));
+            sidebarRoutes.appendChild(navBtn);
+        });
+    }
+	
+	// 지도의 목록을 갱신하기 위해 지도 쪽에 알림
+	if(typeof updateMapButtons === 'function') {
+	    updateMapButtons(day);
+	}
+}
+
+// 공통 버튼 생성 함수
+function createNavButton(text, onClick) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "nav-item";
+    btn.innerText = text;
+    btn.onclick = onClick;
+    return btn;
 }
 
 function moveUpNote(items){

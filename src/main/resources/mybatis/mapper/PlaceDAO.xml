@@ -2,12 +2,14 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.meomureum.springboot.dao.IPlaceDAO">
-	<update id="insertDAO">
-		merge into place p
-         using dual
-         on (p.api_code = #{api_code})
-         when not matched then
-		 insert (p_code, api_code, p_place, p_category, p_lat, p_lon, p_addr)
-		  values('P'||lpad(schedule_seq.nextval,5,'0'),#{api_code},#{p_place},#{p_category},#{p_lat},#{p_lon},#{p_addr})
-	</update>
+	<insert id="insertDAO" parameterType="com.meomureum.springboot.dto.PlaceDTO">
+	    <selectKey keyProperty="p_code" resultType="string" order="BEFORE">
+	        select 'P' || lpad(schedule_seq.nextval, 5, '0') FROM DUAL
+	    </selectKey>
+	    insert into place
+	     values (#{p_code}, #{api_code}, #{p_place}, #{p_category}, #{p_lat}, #{p_lon}, #{p_addr})
+	</insert>
+	<select id="selectDAOByApiCode" resultType="com.meomureum.springboot.dto.PlaceDTO">
+		select * from place where api_code = #{api_code}
+	</select>
 </mapper>

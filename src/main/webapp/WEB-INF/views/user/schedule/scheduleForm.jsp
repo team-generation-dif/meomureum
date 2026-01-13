@@ -23,7 +23,6 @@
 				<input type="text" id="dateSchedule" placeholder="여행 기간을 선택하세요">
 				<input type="hidden" name="s_start" id="s_start">
 				<input type="hidden" name="s_end" id="s_end">
-				<input type="hidden" name="m_id" value="${pageContext.request.userPrincipal.name}">
 			</div>
 			<div>
 				<input type="submit" value="계획 시작">
