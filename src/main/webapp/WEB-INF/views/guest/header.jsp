@@ -33,7 +33,7 @@
         z-index: 100; 
         border: 1px solid #eee;
         border-radius: 4px;
-    }
+    }	
 
     .dropdown-content a { 
         color: #333; 
@@ -90,7 +90,7 @@
                         <c:if test="${pageContext.request.userPrincipal.name != 'admin'}">
 	                        <a href="/user/mypage/myView">내 정보 보기</a>
 	                        <a href="/user/board/list">회원게시판</a>
-	                        <a href="">내 여정</a>
+	                        <a href="/user/mypage/mySchedule">내 여정</a>
 	                        <a href="/user/mypage/faq">고객센터FAQ</a>
                         </c:if>
                         <%-- 1. 보이지 않는 탈퇴용 폼을 하나 만듭니다 --%>

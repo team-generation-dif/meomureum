@@ -5,20 +5,20 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Insert title here</title>
+<title>머무름 - 내 여정</title>
 </head>
 <body>
-	<div>
+	<%@ include file="../../guest/header.jsp" %>
+	<table border="1">
 		<c:forEach var="list" items="${lists}">
-		<div>
-			<p>${list.s_code}
-			<p>${list.p_name}
-			<p>${list.created_at}
-			<p>${list.s_name}
-			<a href="/user/schedule/updateSchedule?s_code=${list.s_code}">이 여행 계획 보기</a>
-			<hr>
-		</div>
+			<tr>
+				<td>${list.s_code}</td>
+				<td>${list.p_name}</td>
+				<td>${list.created_at}</td>
+				<td>${list.s_name}</td>
+				<td><a href="/user/schedule/updateSchedule?s_code=${list.s_code}">이 여행 계획 보기</a></td>
+			</tr>
 		</c:forEach>
-	</div>
+	</table>
 </body>
 </html>

@@ -4,9 +4,11 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.meomureum.springboot.dao.IMemberDAO;
 import com.meomureum.springboot.dao.INoteDAO;
@@ -44,15 +46,16 @@ public class ScheduleController {
 	
 	// 여행 계획 시작 폼
 	@RequestMapping("/user/schedule/schedule")
-	public String schedule(Model model, HttpServletRequest request) {
+	public String schedule(Model model, HttpServletRequest request, Authentication Authentication) {
 		
-		String m_id = request.getParameter("m_id");
+		// 로그인 명 가지고 오기
+		String m_id = Authentication.getName();
 		String p_name = request.getParameter("p_name");
 		String s_start = request.getParameter("s_start");
 		String s_end = request.getParameter("s_end");
 		String mode = "new";
 		
-		// 세션 저장된 m_id로 m_code 가져오기
+		// m_id로 m_code 가져오기
 		MemberDTO memberDTO = memberDAO.selectDAOById(m_id);
 		
 		model.addAttribute("member", memberDTO); // ${member.m_code}로 m_code 전달
@@ -66,25 +69,26 @@ public class ScheduleController {
 	
 	// 내 여행 계획 목록
 	@RequestMapping("/user/mypage/mySchedule")
-	public String mySchedule(Model model, HttpServletRequest request) {
+	public String mySchedule(Model model, Authentication Authentication) {
 		
-		String m_id = request.getParameter("m_id");
+		String m_id = Authentication.getName();
+		MemberDTO memberDTO = memberDAO.selectDAOById(m_id);
+		String m_code = memberDTO.getM_code();
 		
-		model.addAttribute("lists", scheduleDAO.listDAOById(m_id));
+		model.addAttribute("lists", scheduleDAO.listDAOByMCode(m_code));
 		
 		return "user/mypage/mySchedule";
 	}
 	
 	// 여행 계획 수정으로 연결
 	@RequestMapping("/user/schedule/updateSchedule")
-	public String updateSchedule(Model model, HttpServletRequest request) {
+	public String updateSchedule(Model model, @RequestParam("s_code") String s_code) {
 		
-		String s_code = request.getParameter("s_code");
 		ScheduleDTO scheduleDTO = scheduleDAO.selectDAO(s_code);
 		
 		long diff = ChronoUnit.DAYS.between(
-		    LocalDate.parse(scheduleDTO.getS_start()), 
-		    LocalDate.parse(scheduleDTO.getS_end())
+				LocalDate.parse(scheduleDTO.getS_start().substring(0, 10)), 
+			    LocalDate.parse(scheduleDTO.getS_end().substring(0, 10))
 		) + 1;
 		model.addAttribute("dayDiff", diff);
 		
@@ -154,20 +158,32 @@ public class ScheduleController {
 	        String[] p_category = request.getParameterValues("p_category");
 
 	        for (int i=0; i<api_code.length; i++) {
-	            // A. 여행지 정보(Place) 저장 시도 
-	            PlaceDTO placeDTO = new PlaceDTO();
-	            placeDTO.setApi_code(api_code[i]);
-	            placeDTO.setP_place(p_place[i]);
-	            placeDTO.setP_category(p_category[i]);
-	            placeDTO.setP_lat(Double.parseDouble(p_lat[i]));
-	            placeDTO.setP_lon(Double.parseDouble(p_lon[i]));
-	            placeDTO.setP_addr(p_addr[i]);
+	            // 1. 여행지 정보(Place) 저장 시도
+	        	// 이미 DB에 기록된 곳인지 확인
+	        	PlaceDTO existingPlace = placeDAO.selectDAOByApiCode(api_code[i]);
+	            String existingPCode;
 	            
-	            placeDAO.insertDAO(placeDTO);
+	            // 이미 기록된 곳이라면 pcode만 변수에 가져옴
+	            if (existingPlace != null) {
+	            	existingPCode = existingPlace.getP_code();
+            	// 새로운 곳이라면 여행지 정보 저장 + 마이바티스 selectKey기능으로 넘김
+	            } else {
+	            	PlaceDTO placeDTO = new PlaceDTO();
+		            placeDTO.setApi_code(api_code[i]);
+		            placeDTO.setP_place(p_place[i]);
+		            placeDTO.setP_category(p_category[i]);
+		            placeDTO.setP_lat(Double.parseDouble(p_lat[i]));
+		            placeDTO.setP_lon(Double.parseDouble(p_lon[i]));
+		            placeDTO.setP_addr(p_addr[i]);
+		            
+		            placeDAO.insertDAO(placeDTO);
+		            existingPCode = placeDTO.getP_code();
+	            }
 	            
-	            // B. 루트 정보 생성 및 저장
+	            // 2. 루트 정보 생성 및 저장
 	            RouteDTO routeDTO = new RouteDTO();
 	            routeDTO.setS_code(s_code);
+	            routeDTO.setP_code(existingPCode);
 	            routeDTO.setR_day(Integer.parseInt(r_day[i]));
 	            routeDTO.setR_order(Integer.parseInt(r_order[i]));
 	            routeDTO.setR_memo(r_memo[i]);
@@ -176,6 +192,6 @@ public class ScheduleController {
 	        }	
 	    }
 		
-		return "user/schedule/scheduleConfirm";
+		return "redirect:/user/mypage/mySchedule";
 	}
 }

@@ -5,7 +5,7 @@
 	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 	
 <mapper namespace="com.meomureum.springboot.dao.IScheduleDAO">
-	<select id="listDAOById" resultType="com.meomureum.springboot.dto.ScheduleDTO">
+	<select id="listDAOByMCode" resultType="com.meomureum.springboot.dto.ScheduleDTO">
 		select * from schedule where m_code = #{m_code}
 	</select>
 	<select id="selectDAO" resultType="com.meomureum.springboot.dto.ScheduleDTO">
@@ -23,7 +23,9 @@
 	</delete>
  	<update id="updateDAO"> 
 		update schedule
-		 set s_name = #{s_name}, s_start= #{s_start}, s_end= #{s_end}
+		 set s_name = #{s_name}, 
+		 s_start = TO_DATE(SUBSTR(#{s_start}, 1, 10), 'YYYY-MM-DD'), 
+         s_end = TO_DATE(SUBSTR(#{s_end}, 1, 10), 'YYYY-MM-DD')
 		 where s_code = #{s_code}
 	</update>
 </mapper>
