@@ -2,6 +2,9 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.meomureum.springboot.dao.IRouteDAO">
+	<select id="listDAOBySCode" resultType="com.meomureum.springboot.dto.RouteDTO">
+		select * from route r join place p on (r.p_code = p.p_code) where s_code = #{s_code} order by r_day, r_order asc
+	</select>
 	<insert id="insertDAO">
 		insert into route
 		 values('R'||lpad(schedule_seq.nextval,6,'0'),#{p_code,jdbcType=VARCHAR},#{s_code},#{r_order},#{r_memo},#{r_day})
