@@ -91,16 +91,19 @@
                     <c:choose>
                         <%-- 관리자용 메뉴 --%>
                         <c:when test="${pageContext.request.userPrincipal.name == 'admin'}">
-                            <a href="/admin/member/memberList">📂 회원 관리</a>
-                            <a href="#">📂 게시판 관리</a>
-                            <a href="/admin/faq/faqManage">📂 FAQ 관리</a>
+                            <a href="/admin/member/memberList">👤 회원 관리</a>
+                            <a href="/user/board/list">📝 커뮤니티 관리</a>
+                            <a href="/admin/notice/noticeManage">📢 공지사항 관리</a>
+                            <a href="/admin/faq/faqManage">❓ FAQ 관리</a>
+                            <a href="/admin/board/listReports">🚨 신고 접수 관리</a>
                             <a href="#" style="color:red;">⚠️ 관리자 탈퇴</a>
                         </c:when>
                         <%-- 일반 유저용 메뉴 --%>
                         <c:otherwise>
                             <a href="/user/mypage/myView">👤 내 정보 보기</a>
-                            <a href="/user/board/list">💬 회원 게시판</a>
+                            <a href="/user/board/list">📝 커뮤니티 보기</a>
                             <a href="/user/mypage/main">🗓️ 내 여정 보기</a>
+                            <a href="/user/mypage/notice">❗ 공지사항 보기</a>
                             <a href="/user/mypage/faq">❓ 고객센터 FAQ</a>
                         </c:otherwise>
                     </c:choose>

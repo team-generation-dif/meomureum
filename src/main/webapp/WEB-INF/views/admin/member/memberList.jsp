@@ -84,13 +84,13 @@
                     <p>전체 회원수</p>
                 </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon">✨</div>
-                <div class="stat-info">
-                    <b>신규</b>
-                    <p>오늘 가입 회원</p>
-                </div>
-            </div>
+           <div class="stat-card">
+    <div class="stat-icon">✨</div>
+    <div class="stat-info">
+        <b>${newCount}명</b>
+        <p>오늘 가입 회원</p>
+    </div>
+</div>
             <div class="stat-card">
                 <div class="stat-icon">🛠️</div>
                 <div class="stat-info">
