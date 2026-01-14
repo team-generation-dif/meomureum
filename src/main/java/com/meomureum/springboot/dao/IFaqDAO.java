@@ -17,6 +17,8 @@ public interface IFaqDAO {
     // 3. 특정 FAQ 상세 보기 (코드 기준)
     FaqDTO getFaqByCode(String faq_code);
     
+    List<FaqDTO> searchFaqs(String keyword);
+    
     // 4. FAQ 삭제하기
     int deleteFaq(String faq_code);
 }

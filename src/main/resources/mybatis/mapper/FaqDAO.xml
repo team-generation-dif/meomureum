@@ -18,6 +18,12 @@
     <select id="getFaqByCode" resultType="com.meomureum.springboot.dto.FaqDTO">
         SELECT * FROM FAQ WHERE FAQ_CODE = #{faq_code}
     </select>
+    <select id="searchFaqs" resultType="com.meomureum.springboot.dto.FaqDTO">
+    SELECT * FROM FAQ 
+    WHERE FAQ_TITLE LIKE '%' || #{keyword} || '%' 
+       OR FAQ_CONTENT LIKE '%' || #{keyword} || '%'
+    ORDER BY CREATED_AT DESC
+</select>
 
     <delete id="deleteFaq">
         DELETE FROM FAQ WHERE FAQ_CODE = #{faq_code}
