@@ -70,6 +70,41 @@
 	    opacity: 0.4;
 	    background-color: #cfe2ff !important;
 	}
+	
+	/* 노트 내 장소 정보 카드 스타일 */
+	.note-place-info {
+	    display: flex;
+	    gap: 10px;
+	    background-color: #f8f9fa;
+	    border: 1px solid #e9ecef;
+	    border-radius: 5px;
+	    padding: 10px;
+	    margin-bottom: 10px; /* textarea와 간격 */
+	}
+	
+	.note-place-info img {
+	    width: 80px;
+	    height: 80px;
+	    object-fit: cover;
+	    border-radius: 4px;
+	    border: 1px solid #ddd;
+	}
+	
+	.note-place-info .info-text {
+	    flex: 1;
+	    display: flex;
+	    flex-direction: column;
+	    justify-content: center;
+	    font-size: 12px;
+	    line-height: 1.5;
+	    color: #555;
+	}
+	
+	.note-place-info .info-addr {
+	    font-weight: bold;
+	    color: #333;
+	    margin-bottom: 4px;
+	}
 </style>
 <meta charset="UTF-8">
 <title>머무름 - 당신의 여행 계획</title>
@@ -135,6 +170,36 @@
 				                        <input type="button" value="▲" onclick="moveUpNote(this); setOrder();">
 				                        <input type="button" value="▼" onclick="moveDownNote(this); setOrder();">
 				                    </div>
+				                    <c:if test="${not empty note.p_code}">
+							            <div class="note-place-info">
+							                <c:choose>
+							                    <c:when test="${not empty note.file_path}">
+							                        <img src="${note.file_path}" alt="${note.p_name}">
+							                    </c:when>
+							                    <c:otherwise>
+							                        <div style="...">No Image</div>
+							                    </c:otherwise>
+							                </c:choose>
+							                <div class="info-text">
+							                    <div class="info-addr">${note.p_addr}</div>
+							                    <div class="info-tel" style="color:#007bff;">${note.p_tel}</div>
+							                </div>
+							            </div>
+							            <input type="hidden" name="n_api_code" value="${note.api_code}">
+						            </c:if>
+						        	<%-- 값이 있으면 넣고, 없으면 빈 값("")을 넣어 배열 순서를 맞춤 --%>
+							        <input type="hidden" name="n_api_code" value="${note.api_code != null ? note.api_code : ''}">
+							        <input type="hidden" name="n_p_name" value="${note.p_name != null ? note.p_name : ''}">
+							        <input type="hidden" name="n_p_addr" value="${note.p_addr != null ? note.p_addr : ''}">
+							        <input type="hidden" name="n_p_tel" value="${note.p_tel != null ? note.p_tel : ''}">
+							        
+							        <%-- 이미지는 URL이 아니라 DB 경로이므로 재저장 방지 등을 위해 비워두거나, 
+							             새로 이미지를 바꿀 게 아니라면 굳이 다시 보낼 필요는 없지만 배열 맞춤용으로 빈 값 전송 --%>
+							        <input type="hidden" name="n_p_img" value=""> 
+							        
+							        <input type="hidden" name="n_p_cat" value=""> <%-- 카테고리 등은 필요시 DTO에 추가해서 바인딩 --%>
+							        <input type="hidden" name="n_p_x" value="0">
+							        <input type="hidden" name="n_p_y" value="0">
 				                    <textarea name="n_content">${note.n_content}</textarea>
 				                    <input type="hidden" name="n_order" value="${note.n_order}">
 				                    <input type="button" value="노트 삭제" onclick="deleteNote(this)">

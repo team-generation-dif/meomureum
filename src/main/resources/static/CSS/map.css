@@ -1,0 +1,186 @@
+@charset "UTF-8";
+    /* 0. 전체 레이아웃: include될 것을 고려하여 여백 제거 */
+    body, html {margin:0; padding:0; width:100%; height:100%; overflow:hidden;}
+    
+    .map_wrap {position:relative; width:100%; height:100%;}
+    #map {width:100%; height:100%; position:relative; overflow:hidden;}
+    
+	/* 1. 목록 스타일 (토글 기능 포함) */
+    #menu_wrap {
+        position: absolute;
+        top: 10px; left: 10px; bottom: 30px;
+        width: 250px;
+        padding: 5px;
+        overflow-y: auto;
+        background: rgba(255, 255, 255, 0.95);
+        z-index: 2;
+        font-size: 12px;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        transition: transform 0.3s ease-in-out; /* 부드러운 전환 */
+    }
+    
+    /* 목록 숨김 클래스 */
+    #menu_wrap.hidden { transform: translateX(-270px); }
+    
+    /* 목록 토글 버튼 */
+    #toggle_btn {
+        position: absolute;
+        top: 10px; left: 270px; /* 메뉴 너비 + 여백 */
+        width: 25px; height: 50px;
+        background: white;
+        z-index: 2;
+        border: 1px solid #ccc;
+        border-radius: 0 5px 5px 0;
+        cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        transition: left 0.3s ease-in-out;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    }
+    /* 메뉴가 숨겨지면 버튼도 이동 */
+    #toggle_btn.hidden { left: 0; } 
+
+    /* 2. 카테고리 버튼 스타일 (지도 상단 중앙) */
+    .category_bar {
+        position: absolute; top: 10px; left: 50%;
+        transform: translateX(-50%);
+        z-index: 2;
+        background: white;
+        padding: 5px 10px;
+        border-radius: 20px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        display: flex; gap: 5px;
+    }
+    .cat_btn {
+        border: 1px solid #ddd; background: #fff;
+        padding: 5px 12px; border-radius: 15px;
+        font-size: 12px; cursor: pointer;
+    }
+    .cat_btn:hover, .cat_btn.active { background: #007bff; color: white; border-color: #007bff; }
+
+    /* 3. 목록 아이템 스타일 (카드형 디자인 적용) */
+    #placesList { padding: 10px; background-color: #f7f7f7; } /* 배경색 추가 */
+    
+    #placesList .item {
+        position: relative;
+        background: white;
+        border-radius: 8px; /* 둥근 모서리 */
+        box-shadow: 0 2px 5px rgba(0,0,0,0.08); /* 그림자 효과 */
+        overflow: hidden;
+        cursor: pointer;
+        margin-bottom: 15px; /* 아이템 간 간격 */
+        transition: transform 0.2s, box-shadow 0.2s;
+        border: 1px solid #eee;
+    }
+    
+    #placesList .item:hover {
+        transform: translateY(-3px); /* 마우스 올리면 살짝 뜸 */
+        box-shadow: 0 5px 12px rgba(0,0,0,0.15);
+        border-color: #cce5ff;
+    }
+    
+    /* 이미지 영역 */
+    #placesList .item .img-box {
+        width: 100%;
+        height: 120px;
+        background-color: #eee;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+    
+    #placesList .item .img-box img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover; /* 비율 유지하며 꽉 채우기 */
+    }
+    
+    #placesList .item .img-box .no-img {
+        font-size: 12px; color: #aaa;
+    }
+
+    /* 텍스트 정보 영역 */
+    #placesList .item .info-box {
+        padding: 10px;
+    }
+
+    #placesList .item .title {
+        font-weight: bold; 
+        font-size: 15px; 
+        color: #333; 
+        display: block; 
+        margin-bottom: 4px;
+    }
+    
+    #placesList .item .addr {
+        font-size: 12px; color: #666; margin-bottom: 2px;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    
+    #placesList .item .tel {
+        font-size: 12px; color: #007bff; margin-bottom: 8px;
+    }
+    
+    /* 버튼 그룹 (인포윈도우와 동일 스타일) */
+    #placesList .item .btn-group {
+        border-top: 1px solid #f1f1f1;
+        padding-top: 8px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 3px;
+    }
+    
+    #placesList .item .day-add-btn {
+        border: 1px solid #007bff; 
+        background: white; 
+        color: #007bff;
+        padding: 2px 8px; 
+        font-size: 11px; 
+        cursor: pointer; 
+        border-radius: 3px;
+        transition: all 0.2s;
+    }
+    
+    #placesList .item .day-add-btn:hover {
+        background: #007bff; color: white;
+    }
+    
+    /* 인포윈도우 스타일 */
+    .iw_inner { padding: 5px; width: 200px; }
+    .iw_title { font-weight: bold; margin-bottom: 5px; display: block;}
+    .iw_btn_group { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 3px; }
+    .iw_btn_group button {
+        border: 1px solid #007bff; background: white; color: #007bff;
+        padding: 2px 6px; font-size: 11px; cursor: pointer; border-radius: 3px;
+    }
+    .iw_btn_group button:hover { background: #007bff; color: white; }
+    
+    /* 자동완성 박스 스타일 */
+    #suggestion_box {
+        display: none; /* 평소엔 숨김 */
+        position: absolute;
+        top: 45px; /* 검색창 바로 아래 */
+        left: 5px;
+        right: 5px;
+        background: white;
+        border: 1px solid #ccc;
+        border-top: none;
+        z-index: 10;
+        max-height: 200px;
+        overflow-y: auto;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        border-radius: 0 0 5px 5px;
+    }
+    #suggestion_box div {
+        padding: 8px 10px;
+        cursor: pointer;
+        font-size: 12px;
+        border-bottom: 1px solid #eee;
+    }
+    #suggestion_box div:hover {
+        background-color: #f1f1f1;
+    }
+    #suggestion_box strong {
+        color: #007bff;
+    }

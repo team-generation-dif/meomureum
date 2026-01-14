@@ -147,11 +147,67 @@ public class ScheduleController {
 			String[] n_order = request.getParameterValues("n_order");
 			NoteDTO noteDTO = new NoteDTO();
 			
+			String[] n_api_code = request.getParameterValues("n_api_code"); 
+		    String[] n_p_name = request.getParameterValues("n_p_name");
+		    String[] n_p_addr = request.getParameterValues("n_p_addr");
+		    String[] n_p_tel = request.getParameterValues("n_p_tel");
+		    String[] n_p_img = request.getParameterValues("n_p_img");
+		    String[] n_p_cat = request.getParameterValues("n_p_cat");
+		    String[] n_p_x = request.getParameterValues("n_p_x");
+		    String[] n_p_y = request.getParameterValues("n_p_y");
+			
+		    // 파일 저장 경로 (클래스 멤버변수 사용)
+		    java.io.File dir = new java.io.File(uploadDir);
+		    if (!dir.exists()) dir.mkdirs();
+		    
 			for (int i=0; i<n_title.length;i++) {
 				noteDTO.setS_code(s_code);
 				noteDTO.setN_title(n_title[i]);
 				noteDTO.setN_content(n_content[i]);
 				noteDTO.setN_order(Integer.parseInt(n_order[i]));
+				
+				// n_api_code 배열이 존재하고, 현재 인덱스에 값이 있다면 (빈 문자열이 아니면)
+		        if (n_api_code != null && n_api_code.length > i && n_api_code[i] != null && !n_api_code[i].isEmpty()) {
+		            
+		            // 1) PlaceDB 확인
+		            PlaceDTO existingPlace = placeDAO.selectDAOByApiCode(n_api_code[i]);
+		            String pCode;
+		            
+		            if (existingPlace != null) {
+		                pCode = existingPlace.getP_code();
+		            } else {
+		                // 2) 신규 장소 저장
+		                PlaceDTO placeDTO = new PlaceDTO();
+		                placeDTO.setApi_code(n_api_code[i]);
+		                placeDTO.setP_place(n_p_name[i]);
+		                placeDTO.setP_addr(n_p_addr[i]);
+		                placeDTO.setP_tel(n_p_tel[i]); // 전화번호 저장
+		                placeDTO.setP_category(n_p_cat[i]);
+		                placeDTO.setP_lon(Double.parseDouble(n_p_x[i]));
+		                placeDTO.setP_lat(Double.parseDouble(n_p_y[i]));
+		                
+		                placeDAO.insertDAO(placeDTO);
+		                pCode = placeDTO.getP_code();
+		                
+		                // 3) 이미지 다운로드 & 저장 (신규 장소일 때만)
+		                if (n_p_img[i] != null && !n_p_img[i].isEmpty()) {
+		                    String savedFileName = saveImageFromUrl(n_p_img[i], uploadDir);
+		                    if (savedFileName != null) {
+		                        FileuploadDTO fileDTO = new FileuploadDTO();
+		                        fileDTO.setTarget_type("PLACE");
+		                        fileDTO.setTarget_code(pCode);
+		                        fileDTO.setFile_name(savedFileName);
+		                        fileDTO.setFile_path("/upload/place/" + savedFileName);
+		                        fileDTO.setFile_order(1);
+		                        fileuploadDAO.insertFile(fileDTO);
+		                    }
+		                }
+		            }
+		            // 4) 노트 DTO에 p_code 세팅 (테이블에 컬럼이 있어야 함)
+		            noteDTO.setP_code(pCode);
+		        } else {
+		            noteDTO.setP_code(null); // 장소 없는 노트
+		        }
 				
 				noteDAO.insertDAO(noteDTO);
 			}
