@@ -74,6 +74,7 @@ function addRoute(day, place) {
         <input type="hidden" name="r_day" value="${day}">
         <input type="hidden" name="r_order">
         
+		<input type="hidden" name="p_image_url" value="${place.image_url}">
         <input type="hidden" name="api_code" value="${place.id}">
         <input type="hidden" name="p_place" value="${place.place_name}">
         <input type="hidden" name="p_category" value="${place.category_group_name}">

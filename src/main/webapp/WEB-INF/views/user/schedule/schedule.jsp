@@ -222,6 +222,7 @@
 			        },
 			        onReady: function(selectedDates, dateStr, instance) {
 			            if (selectedDates.length === 2) {
+			            	newRoute();
 			                // 수정 모드일 때는 이미 HTML이 그려져 있으므로 
 			                // 새로 생성하는 대신 기존 ul들에 Sortable만 바인딩
 			                const lists = document.querySelectorAll('.route_list');
