@@ -4,51 +4,86 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>마이페이지 - 공지사항</title>
+<title>머무름 - 공지사항</title>
 <style>
-    .notice-container { width: 800px; margin: 40px auto; font-family: 'Malgun Gothic', sans-serif; }
-    .notice-header { border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 30px; }
-    .notice-header h2 { margin: 0; color: #2c3e50; }
+    /* [1] 기본 레이아웃 */
+    body { background-color: #ffffff; margin: 0; font-family: 'Malgun Gothic', sans-serif; color: #333; }
+    .notice-container { width: 900px; margin: 60px auto; padding: 0 20px; }
+
+    /* [2] 상단 헤더: 서비스 감성 */
+    .notice-header { text-align: center; margin-bottom: 50px; }
+    .notice-header h2 { font-size: 32px; color: #2d3436; font-weight: bold; margin-bottom: 10px; }
+    .notice-header p { color: #a2a2a2; font-size: 15px; }
+    .header-line { width: 40px; height: 3px; background: #a29bfe; margin: 20px auto; border-radius: 2px; }
     
-    .notice-item { border-bottom: 1px solid #eee; }
+    /* [3] 공지사항 리스트 디자인 */
+    .notice-list { border-top: 2px solid #2d3436; }
+    .notice-item { border-bottom: 1px solid #f1f3ff; }
     
     /* 질문(제목) 영역 */
     .notice-q { 
-        padding: 20px; cursor: pointer; display: flex; align-items: center; 
-        font-size: 16px; font-weight: 500; transition: background 0.2s;
+        padding: 25px 20px; cursor: pointer; display: flex; align-items: center; 
+        font-size: 17px; font-weight: 500; transition: 0.3s;
+        background: #fff;
     }
-    .notice-q:hover { background: #fcfcfc; }
+    .notice-q:hover { background: #fafaff; }
     
-    /* 공지사항 포인트 컬러: 파란색(#3498db) */
-    .q-sign { color: #3498db; font-weight: bold; font-size: 20px; margin-right: 15px; }
-    .cate { color: #999; font-size: 12px; margin-right: 10px; border: 1px solid #eee; padding: 2px 5px; border-radius: 3px; }
+    /* 포인트 컬러 및 뱃지 */
+    .q-sign { color: #a29bfe; font-weight: bold; font-size: 18px; margin-right: 20px; font-family: 'Arial'; }
     
-    /* 답변(내용) 영역: 기본 숨김 */
+    .cate { 
+        font-size: 11px; font-weight: bold; color: #a29bfe; 
+        background: #f1f3ff; padding: 4px 10px; border-radius: 20px; 
+        margin-right: 15px; text-transform: uppercase;
+    }
+    
+    /* 답변(내용) 영역 */
     .notice-a { 
-        display: none; padding: 25px 25px 25px 55px; 
-        background-color: #f9f9f9; color: #666; line-height: 1.8; border-top: 1px solid #f1f1f1;
-        white-space: pre-wrap; /* 줄바꿈 유지 */
+        display: none; padding: 35px 40px 35px 75px; 
+        background-color: #fcfcfd; color: #555; line-height: 1.9; 
+        border-top: 1px solid #f8f9ff;
+        white-space: pre-wrap; font-size: 15px;
     }
     
-    /* 화살표 애니메이션 */
-    .arrow { margin-left: auto; color: #ccc; transition: transform 0.3s; }
-    .notice-q.active .arrow { transform: rotate(180deg); color: #3498db; }
+    /* 화살표 아이콘 */
+    .arrow { 
+        margin-left: auto; width: 24px; height: 24px; 
+        display: flex; align-items: center; justify-content: center;
+        color: #ddd; transition: 0.3s; font-size: 12px;
+    }
+    .notice-q.active { color: #a29bfe; background: #fafaff; }
+    .notice-q.active .arrow { transform: rotate(180deg); color: #a29bfe; }
+
+    /* [4] 하단 버튼 */
+    .footer-area { text-align: center; margin-top: 60px; }
+    .btn-home { 
+        display: inline-block; text-decoration: none; padding: 15px 40px; 
+        background: #2d3436; color: white; border-radius: 30px; 
+        font-weight: bold; font-size: 14px; transition: 0.3s;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    .btn-home:hover { background: #a29bfe; transform: translateY(-3px); box-shadow: 0 10px 20px rgba(162,155,254,0.3); }
+
+    /* 텅 빈 상태 */
+    .empty-msg { text-align: center; padding: 100px 0; color: #ccc; font-size: 16px; }
 </style>
 </head>
 <body>
 
 <div class="notice-container">
     <div class="notice-header">
+        <p>STAY MEOMUREUM</p>
         <h2>공지사항</h2>
+        <div class="header-line"></div>
     </div>
 
     <div class="notice-list">
         <c:forEach var="notice" items="${noticeList}">
             <div class="notice-item">
                 <div class="notice-q" onclick="toggleNotice(this, '${notice.notice_code}')">
-                    <span class="q-sign">Q</span>
+                    <span class="q-sign">NOTICE</span>
                     <span class="cate">${notice.notice_category}</span>
-                    <span>${notice.notice_title}</span>
+                    <span class="title-text">${notice.notice_title}</span>
                     <span class="arrow">▼</span>
                 </div>
                 <div id="ans-${notice.notice_code}" class="notice-a">
@@ -58,27 +93,28 @@
         </c:forEach>
         
         <c:if test="${empty noticeList}">
-            <div style="text-align:center; padding:80px 0; color:#bbb;">등록된 공지사항이 없습니다.</div>
+            <div class="empty-msg">
+                <img src="https://cdn-icons-png.flaticon.com/512/7486/7486744.png" width="50" style="opacity: 0.2; margin-bottom: 20px;"><br>
+                등록된 새 소식이 없습니다.
+            </div>
         </c:if>
     </div>
 
-    <div style="text-align: center; margin-top: 50px;">
-        <a href="/user/mypage/main" style="text-decoration: none; padding: 12px 25px; background: #34495e; color: white; border-radius: 4px; font-weight: bold; font-size: 14px;">
-            🏠 메인으로
+    <div class="footer-area">
+        <a href="/user/mypage/main" class="btn-home">
+            🏠 마이페이지로 돌아가기
         </a>
     </div>
 </div>
 
 <script>
 function toggleNotice(btn, code) {
-    // 1. 해당 ID를 가진 답변창 찾기
     var targetAns = document.getElementById('ans-' + code);
     if (!targetAns) return;
 
-    // 2. 현재 열림 상태 확인
     var isOpen = (targetAns.style.display === 'block');
 
-    // 3. 모든 답변창 닫기 및 활성화 클래스 제거
+    // 모든 공지 닫기
     document.querySelectorAll('.notice-a').forEach(function(el) {
         el.style.display = 'none';
     });
@@ -86,7 +122,7 @@ function toggleNotice(btn, code) {
         el.classList.remove('active');
     });
 
-    // 4. 원래 닫혀있었다면 해당 창 열기
+    // 클릭한 공지만 열기
     if (!isOpen) {
         targetAns.style.display = 'block';
         btn.classList.add('active');
