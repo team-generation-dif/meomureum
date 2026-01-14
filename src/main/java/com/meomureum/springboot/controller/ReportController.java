@@ -34,38 +34,60 @@ public class ReportController {
     private IReplyDAO replyDAO;
 
     // 📍 관리자: 신고 목록 조회
-    @GetMapping("/admin/report/list")
-    public String listReports(Model model) {
-        List<ReportDTO> reports = reportDAO.listReports();
-        model.addAttribute("reports", reports);
-        return "admin/board/listReports"; // JSP 경로 맞춤
+    @GetMapping("/admin/board/listreports")
+    public String listReports(@RequestParam(name = "page", defaultValue = "1") int page,
+            				  @RequestParam(name = "size", defaultValue = "10") int size,
+            			      Model model) {
+    	int startRow = (page - 1) * size + 1;
+        int endRow = page * size;
+
+        model.addAttribute("pendingReports", reportDAO.listPendingReports(startRow, endRow));
+        model.addAttribute("doneReports", reportDAO.listDoneReports(startRow, endRow));
+        model.addAttribute("ignoredReports", reportDAO.listIgnoredReports(startRow, endRow));
+        // doneReports, ignoredReports도 동일하게 처리
+
+        model.addAttribute("currentPage", page);
+        model.addAttribute("pageSize", size);
+        model.addAttribute("totalPages", 10); // 실제 전체 페이지 수 계산해서 넣어야 함
+
+        return "admin/board/listReports";
+
     }
 
     // 신고 처리 (예: 삭제)
-    @PostMapping("/admin/report/process")
+    @PostMapping("/admin/board/listreports/process")
     public String processReport(@RequestParam("rep_code") String rep_code,
-                                @RequestParam("target_code") String target_code,
-                                @RequestParam("rep_category") String rep_category,
                                 @RequestParam("action") String action) {
+        ReportDTO dto = new ReportDTO();
+        dto.setRep_code(rep_code);
+        
+        ReportDTO report = reportDAO.findReportByCode(rep_code);
 
         if ("DELETE".equals(action)) {
-            if ("BOARD".equals(rep_category)) {
-                boardDAO.deleteDao(target_code); // 게시글 삭제
-            } else if ("REPLY".equals(rep_category)) {
-                replyDAO.deleteReply(target_code); // 댓글 삭제
+            // 신고 수용 → 실제 콘텐츠 삭제 + 상태 DONE
+            dto.setRep_status("DONE");
+            // 카테고리에 따라 실제 삭제 처리
+            if ("BOARD".equals(report.getRep_category())) {
+                boardDAO.deleteBoard(report.getTarget_code());
+            } else if ("REPLY".equals(report.getRep_category())) {
+                replyDAO.deleteReply(report.getTarget_code());
             }
+            reportDAO.updateReportStatus(dto);
+
+        } else if ("IGNORE".equals(action)) {
+            // 신고 무시 → 콘텐츠 유지 + 상태 IGNORE
+            dto.setRep_status("IGNORE");
+            reportDAO.updateReportStatus(dto);
         }
-        // 신고 자체도 목록에서 제거
-        reportDAO.deleteReport(rep_code);
-        return "redirect:/admin/report/list";
+
+        return "redirect:/admin/board/listreports";
     }
 
+
     @PostMapping("/report/submit")
-    public String submitReport(@ModelAttribute ReportDTO dto,
-                               Authentication authentication) {
+    public String submitReport(@ModelAttribute ReportDTO dto, Authentication authentication) {
         String m_id = authentication.getName();
         MemberDTO member = memberDAO.selectDAOById(m_id);
-
         dto.setM_code(member.getM_code());
         
         // 게시글 신고면 게시글 코드, 댓글 신고면 댓글 코드가 target_code에 들어가야 함
