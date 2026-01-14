@@ -90,22 +90,29 @@
                     <div class="reply-content">
                         <c:choose>
                             <c:when test="${reply.re_secret eq 'Y'}">
-                                <em>비밀댓글입니다.</em>
+                                <c:if test="${reply.m_code eq sessionScope.m_code or sessionScope.loginRole eq 'ADMIN'}">
+                                    ${reply.re_content} <!-- 본인/관리자일 경우 내용 표시 -->
+                                </c:if>
+                                <c:if test="${reply.m_code ne sessionScope.m_code and sessionScope.loginRole ne 'ADMIN'}">
+                                    <em>비밀댓글입니다.</em> <!-- 다른 사용자일 경우 -->
+                                </c:if>
                             </c:when>
                             <c:otherwise>
-                                ${reply.re_content}
+                                ${reply.re_content} <!-- 일반 댓글 -->
                             </c:otherwise>
                         </c:choose>
                     </div>
 
                     <!-- 버튼 영역 -->
                     <div class="reply-actions">
-                        <button type="button" class="btn btn-primary btn-xs"
-                                onclick="toggleEdit('${reply.re_code}')">수정</button>
+    					<c:if test="${reply.m_code eq sessionScope.m_code or sessionScope.loginRole eq 'ADMIN'}">
+        					<button type="button" class="btn btn-primary btn-xs"
+                				onclick="toggleEdit('${reply.re_code}')">수정</button>
 
-                        <button type="button" class="btn btn-danger btn-xs"
-        						onclick="deleteReply('${reply.re_code}', '${board.b_code}')">삭제</button>
-
+       						<button type="button" class="btn btn-danger btn-xs"
+                				onclick="deleteReply('${reply.re_code}', '${board.b_code}')">삭제</button>
+    					</c:if>
+    					
 						<script>
 						function deleteReply(reCode, bCode) {
     						if(confirm("정말 이 댓글을 삭제하시겠습니까?")) {
@@ -113,12 +120,12 @@
    							 }
 						}
 						</script>
-						                                
-                        <button type="button" class="btn btn-warning btn-xs"
-                                onclick="openReportForm('REPLY', '${reply.re_code}')">댓글 신고</button>
-                    </div>
-                </div>
-
+						  
+						 <!-- 신고 버튼은 누구나 가능 -->
+    					<button type="button" class="btn btn-warning btn-xs"
+            				onclick="openReportForm('REPLY', '${reply.re_code}')">댓글 신고</button>
+					</div>
+            
                 <!-- 숨겨진 수정 폼 -->
                 <div id="editForm-${reply.re_code}" style="display:none; margin-top:10px;">
                     <form method="post" action="/user/board/reply/update">

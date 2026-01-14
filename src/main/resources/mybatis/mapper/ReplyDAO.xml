@@ -61,5 +61,10 @@
     <delete id="deleteReply" parameterType="String">
     	DELETE FROM reply WHERE re_code = #{re_code}
     </delete>
-        
+    
+    <!-- 댓글 → 부모 게시글 코드 찾기 -->
+    <select id="findBoardCodeByReply" parameterType="String" resultType="String">
+        SELECT b_code FROM reply WHERE re_code = #{re_code}
+    </select>
+           
 </mapper>

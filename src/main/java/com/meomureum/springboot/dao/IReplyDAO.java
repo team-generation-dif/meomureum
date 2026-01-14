@@ -11,5 +11,6 @@ public interface IReplyDAO {
     List<ReplyDTO> getReplies(String b_code);    // 댓글 목록 조회
     void updateReply(ReplyDTO dto);   // 댓글 수정
     void deleteReply(String re_code); // 댓길 삭제  
+    String findBoardCodeByReply(String re_code); // 댓글 → 게시글 코드 찾기
 }
 
