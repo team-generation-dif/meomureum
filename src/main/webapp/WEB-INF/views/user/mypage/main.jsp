@@ -217,11 +217,13 @@ body {
 
 	<nav class="sidebar">
 		<div class="logo">🏠 머무름</div>
-		<a href="/user/mypage/main" class="menu-link active">내 대시보드</a> <a
-			href="/user/mypage/myView" class="menu-link">내 정보 상세</a> <a
-			href="/user/schedule/schedule" class="menu-link">여정 관리</a> <a
-			href="/user/board/list" class="menu-link">커뮤니티</a> <a
-			href="/user/mypage/notice" class="menu-link">공지사항</a>
+		<a href="/user/mypage/main" class="menu-link active">내 대시보드</a> 
+		<a href="/user/mypage/myView" class="menu-link">내 정보 상세</a>
+		<a href="/user/schedule/schedule" class="menu-link">여정 관리</a>
+		<a href="/user/board/list" class="menu-link">커뮤니티</a>
+		<a href="/user/mypage/notice" class="menu-link">공지사항</a>
+		<a href="/user/mypage/faq" class="menu-link">FAQ</a>	
+		
 		<div style="margin-top: auto;">
 			<a href="/logout" class="menu-link" style="color: #ff7675;">로그아웃</a>
 		</div>

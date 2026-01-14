@@ -1,15 +1,11 @@
 package com.meomureum.springboot.controller;
 
 import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import com.meomureum.springboot.dao.IBoardDAO;
 import com.meomureum.springboot.dao.IMemberDAO;
@@ -23,67 +19,59 @@ public class ReportController {
 
     @Autowired
     private IReportDAO reportDAO;
-
     @Autowired
     private IMemberDAO memberDAO;
-    
     @Autowired
     private IBoardDAO boardDAO;
-
     @Autowired
     private IReplyDAO replyDAO;
 
-    // 📍 관리자: 신고 목록 조회
-    @GetMapping("/admin/report/list")
+    // 관리자: 신고 목록
+    @GetMapping("/admin/report/listReports")
     public String listReports(Model model) {
         List<ReportDTO> reports = reportDAO.listReports();
         model.addAttribute("reports", reports);
-        return "admin/board/listReports"; // JSP 경로 맞춤
+        return "admin/board/listReports";
     }
 
-    // 신고 처리 (예: 삭제)
+    // 관리자: 신고 처리
     @PostMapping("/admin/report/process")
     public String processReport(@RequestParam("rep_code") String rep_code,
                                 @RequestParam("target_code") String target_code,
-                                @RequestParam("rep_category") String rep_category,
+                                @RequestParam(value="rep_category", required=false, defaultValue="BOARD") String rep_category,
                                 @RequestParam("action") String action) {
-
         if ("DELETE".equals(action)) {
-            if ("BOARD".equals(rep_category)) {
-                boardDAO.deleteDao(target_code); // 게시글 삭제
-            } else if ("REPLY".equals(rep_category)) {
-                replyDAO.deleteReply(target_code); // 댓글 삭제
+            if ("BOARD".equalsIgnoreCase(rep_category) || "게시글".equals(rep_category)) {
+                boardDAO.deleteDao(target_code);
+            } else if ("REPLY".equalsIgnoreCase(rep_category) || "댓글".equals(rep_category)) {
+                replyDAO.deleteReply(target_code);
             }
         }
-        // 신고 자체도 목록에서 제거
         reportDAO.deleteReport(rep_code);
-        return "redirect:/admin/report/list";
+        return "redirect:/admin/report/listReports";
     }
 
+    // 유저: 신고 제출 처리 (에러 발생 지점)
+    // 반드시 앞에 /가 붙어야 하며, JSP의 action과 일치해야 함
     @PostMapping("/report/submit")
-    public String submitReport(@ModelAttribute ReportDTO dto,
-                               Authentication authentication) {
+    public String submitReport(@ModelAttribute ReportDTO dto, Authentication authentication) {
+        if (authentication == null) return "redirect:/guest/loginForm";
+
         String m_id = authentication.getName();
         MemberDTO member = memberDAO.selectDAOById(m_id);
-
         dto.setM_code(member.getM_code());
-        
-        // 게시글 신고면 게시글 코드, 댓글 신고면 댓글 코드가 target_code에 들어가야 함
-        // 이미 JSP에서 hidden input으로 target_code를 넘기고 있다면 그대로 dto에 매핑됨
-        // 만약 없다면 여기서 직접 세팅 필요
-                               
+                                   
         reportDAO.insertReport(dto);
         
         String redirectUrl;
-        if ("BOARD".equals(dto.getRep_category())) {
-            // 게시글 신고 → 그대로 게시글 상세로
+        // 카테고리에 맞춰 리다이렉트 경로 설정
+        if ("BOARD".equalsIgnoreCase(dto.getRep_category())) {
             redirectUrl = "/user/board/detail/" + dto.getTarget_code();
-        } else if ("REPLY".equals(dto.getRep_category())) {
-            // 댓글 신고 → 댓글의 부모 게시글 코드 찾아서 이동
+        } else if ("REPLY".equalsIgnoreCase(dto.getRep_category())) {
             String b_code = replyDAO.findBoardCodeByReply(dto.getTarget_code());
             redirectUrl = "/user/board/detail/" + b_code;
         } else {
-            redirectUrl = "/user/board/list"; // fallback
+            redirectUrl = "/user/board/list";
         }
 
         return "redirect:" + redirectUrl;
