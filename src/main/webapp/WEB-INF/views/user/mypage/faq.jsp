@@ -4,34 +4,86 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>마이페이지 - FAQ</title>
+<title>머무름 - FAQ</title>
 <style>
-    .faq-container { width: 800px; margin: 40px auto; font-family: 'Malgun Gothic', sans-serif; }
-    .faq-header { border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 30px; }
-    .faq-item { border-bottom: 1px solid #eee; }
+    /* [1] 기본 레이아웃 및 폰트 */
+    body { background-color: #ffffff; margin: 0; font-family: 'Malgun Gothic', sans-serif; color: #333; }
+    .faq-container { width: 900px; margin: 60px auto; padding: 0 20px; }
+
+    /* [2] 상단 헤더: 서비스 감성 */
+    .faq-header { text-align: center; margin-bottom: 50px; }
+    .faq-header h2 { font-size: 32px; color: #2d3436; font-weight: bold; margin-bottom: 10px; }
+    .faq-header p { color: #a2a2a2; font-size: 15px; }
+    .header-line { width: 40px; height: 3px; background: #a29bfe; margin: 20px auto; border-radius: 2px; }
     
-    /* 질문 영역 */
-    .faq-q { padding: 20px; cursor: pointer; display: flex; align-items: center; font-size: 16px; font-weight: 500; transition: background 0.2s; }
-    .faq-q:hover { background: #fcfcfc; }
-    .q-sign { color: #4CAF50; font-weight: bold; font-size: 20px; margin-right: 15px; }
-    .cate { color: #999; font-size: 12px; margin-right: 10px; border: 1px solid #eee; padding: 2px 5px; border-radius: 3px; }
+    /* [3] FAQ 리스트 디자인 */
+    .faq-list { border-top: 2px solid #2d3436; }
+    .faq-item { border-bottom: 1px solid #f1f3ff; }
     
-    /* 답변 영역 (기본 숨김) */
-    .faq-a { 
-        display: none; padding: 20px 20px 20px 55px; 
-        background-color: #f9f9f9; color: #666; line-height: 1.6; border-top: 1px solid #f1f1f1;
-        white-space: pre-wrap; /* 줄바꿈 허용 */
+    /* 질문 영역 (Accordion Header) */
+    .faq-q { 
+        padding: 25px 20px; cursor: pointer; display: flex; align-items: center; 
+        font-size: 17px; font-weight: 500; transition: 0.3s;
+        background: #fff;
+    }
+    .faq-q:hover { background: #fafaff; }
+    
+    /* Q 아이콘 및 뱃지 */
+    .q-sign { 
+        color: #a29bfe; font-weight: bold; font-size: 22px; 
+        margin-right: 20px; font-family: 'Arial'; opacity: 0.6;
+    }
+    .cate { 
+        font-size: 11px; font-weight: bold; color: #a29bfe; 
+        background: #f1f3ff; padding: 4px 12px; border-radius: 20px; 
+        margin-right: 15px; text-transform: uppercase;
+        white-space: nowrap;
     }
     
-    .arrow { margin-left: auto; color: #ccc; transition: 0.3s; }
-    .faq-q.active .arrow { transform: rotate(180deg); color: #4CAF50; }
+    /* 답변 영역 (Accordion Body) */
+    .faq-a { 
+        display: none; padding: 35px 40px 35px 85px; 
+        background-color: #fcfcfd; color: #666; line-height: 1.9; 
+        border-top: 1px solid #f8f9ff;
+        white-space: pre-wrap; font-size: 15px;
+        position: relative;
+    }
+    /* 답변 영역에 A 표시 (가상 요소) */
+    .faq-a::before {
+        content: 'A'; position: absolute; left: 40px; top: 35px;
+        color: #a29bfe; font-weight: bold; font-size: 22px; opacity: 0.3;
+    }
+    
+    /* 화살표 애니메이션 */
+    .arrow { 
+        margin-left: auto; width: 24px; height: 24px; 
+        display: flex; align-items: center; justify-content: center;
+        color: #ddd; transition: 0.3s; font-size: 12px;
+    }
+    .faq-q.active { color: #a29bfe; background: #fafaff; }
+    .faq-q.active .arrow { transform: rotate(180deg); color: #a29bfe; }
+
+    /* [4] 하단 홈 버튼 */
+    .footer-area { text-align: center; margin-top: 60px; }
+    .btn-home { 
+        display: inline-block; text-decoration: none; padding: 15px 45px; 
+        background: #2d3436; color: white; border-radius: 35px; 
+        font-weight: bold; font-size: 14px; transition: 0.3s;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    .btn-home:hover { background: #a29bfe; transform: translateY(-3px); box-shadow: 0 10px 20px rgba(162,155,254,0.3); }
+
+    /* 검색 결과 없음 */
+    .empty-msg { text-align: center; padding: 100px 0; color: #ccc; }
 </style>
 </head>
 <body>
 
 <div class="faq-container">
     <div class="faq-header">
-        <h2>자주 묻는 질문 (FAQ)</h2>
+        <p>STAY MEOMUREUM SUPPORT</p>
+        <h2>자주 묻는 질문</h2>
+        <div class="header-line"></div>
     </div>
 
     <div class="faq-list">
@@ -40,7 +92,7 @@
                 <div class="faq-q" onclick="toggleFaq(this, '${faq.faq_code}')">
                     <span class="q-sign">Q</span>
                     <span class="cate">${faq.faq_category}</span>
-                    <span>${faq.faq_title}</span>
+                    <span class="title-text">${faq.faq_title}</span>
                     <span class="arrow">▼</span>
                 </div>
                 <div id="ans-${faq.faq_code}" class="faq-a">
@@ -50,27 +102,28 @@
         </c:forEach>
         
         <c:if test="${empty faqList}">
-            <div style="text-align:center; padding:80px 0; color:#bbb;">등록된 질문이 없습니다.</div>
+            <div class="empty-msg">
+                <img src="https://cdn-icons-png.flaticon.com/512/7486/7486744.png" width="50" style="opacity: 0.2; margin-bottom: 20px;"><br>
+                궁금해하실 정보들을 준비 중입니다.
+            </div>
         </c:if>
     </div>
 
-    <div style="text-align: center; margin-top: 50px;">
-        <a href="/user/mypage/main" style="text-decoration: none; padding: 10px 20px; background: #34495e; color: white; border-radius: 4px; font-weight: bold; font-size: 14px;">
-            🏠 메인으로
+    <div class="footer-area">
+        <a href="/user/mypage/main" class="btn-home">
+            🏠 마이페이지로 돌아가기
         </a>
     </div>
 </div>
 
 <script>
 function toggleFaq(btn, code) {
-    // 1. 클릭한 질문에 해당하는 답변창 찾기
     var targetAns = document.getElementById('ans-' + code);
-    if (!targetAns) return; // 요소를 찾지 못하면 함수 종료
+    if (!targetAns) return;
 
-    // 2. 현재 열려있는지 확인
     var isOpen = (targetAns.style.display === 'block');
 
-    // 3. 모든 답변창을 닫고, 모든 질문의 active 클래스 제거 (하나만 열리게 함)
+    // 하나만 열리도록 모든 답변창 닫기
     document.querySelectorAll('.faq-a').forEach(function(el) {
         el.style.display = 'none';
     });
@@ -78,7 +131,7 @@ function toggleFaq(btn, code) {
         el.classList.remove('active');
     });
 
-    // 4. 원래 닫혀있었다면 해당 답변창만 열기
+    // 클릭한 질문만 열기
     if (!isOpen) {
         targetAns.style.display = 'block';
         btn.classList.add('active');

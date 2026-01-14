@@ -1,6 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -42,7 +42,7 @@
 </style>
 </head>
 <body>
-
+<%@ include file="../../guest/header.jsp" %>
 <div class="container">
     <h3><span class="glyphicon glyphicon-list-alt"></span> 게시판 목록</h3>
 

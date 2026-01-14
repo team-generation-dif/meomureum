@@ -1,6 +1,7 @@
 package com.meomureum.springboot.controller;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -14,15 +15,21 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.meomureum.springboot.dao.IBoardDAO;
 import com.meomureum.springboot.dao.IMemberDAO;
+import com.meomureum.springboot.dao.IScheduleDAO;
+import com.meomureum.springboot.dto.BoardDTO;
 import com.meomureum.springboot.dto.MemberDTO;
+import com.meomureum.springboot.dto.ScheduleDTO;
 
 @Controller
 public class MemberController {
 
     @Autowired private IMemberDAO memberDAO;
+    @Autowired private IScheduleDAO scheduleDAO;
+    @Autowired private IBoardDAO boardDAO;
     @Autowired private PasswordEncoder passwordEncoder;
-
+    
     // 0. 로그인 성공 후 분기 처리
     @RequestMapping("/loginSuccess")
     public String loginSuccess(Authentication authentication) {
@@ -30,16 +37,20 @@ public class MemberController {
         String roles = authorities.toString();
         
         if (roles.contains("ADMIN") || roles.contains("ROLE_ADMIN")) {
-            return "redirect:/admin/member/memberList";
+            return "redirect:/admin/member/main";
         }
         return "redirect:/user/mypage/main";
     }
 
     @RequestMapping("/Home")
-    public String homeIntro() {
+    public String homeIntro(Model model) {
+        // [수정] 실시간 인기 게시글 4개를 가져와서 모델에 담기
+        // selectBestPosts()는 조회수(hit) 순으로 상위 4개를 가져오는 메서드라고 가정합니다.
+        List<BoardDTO> bestPosts = boardDAO.listDao(); 
+        model.addAttribute("bestPosts", bestPosts);
+        
         return "common/Home";
     }
-
     @RequestMapping("/")
     public String index() { return "guest/main"; }
 
@@ -76,7 +87,12 @@ public class MemberController {
     // ==========================================
 
     @RequestMapping("/user/mypage/main")
-    public String usermain() { 
+    public String usermain(Authentication authentication, Model model) { 
+    	String m_id = authentication.getName();
+        MemberDTO dto = memberDAO.selectDAOById(m_id); 
+        List<ScheduleDTO> scheduleDTO = scheduleDAO.listDAOByMCode(dto.getM_code());
+        
+        model.addAttribute("schedules", scheduleDTO);
         return "user/mypage/main"; 
     }
 
@@ -152,41 +168,57 @@ public class MemberController {
     }
 
  // ==========================================
-    // 4. 관리자 영역 (Admin)
-    // ==========================================
+ // 4. 관리자 영역 (Admin)
+ // ==========================================
 
-    // [수정됨] 매핑 주소를 /list로 변경하여 404 에러 해결 및 FaqController와 충돌 방지
- // MemberController.java
-    @RequestMapping("/admin/member/memberList") // 로그에 찍힌 주소와 동일하게 수정
-    public String list(
-            @RequestParam(value="keyword", required=false) String keyword, 
-            Model model) {
-        
-        if (keyword != null && !keyword.isEmpty()) {
-            model.addAttribute("members", memberDAO.searchMembers(keyword));
-            model.addAttribute("keyword", keyword);
-        } else {
-            model.addAttribute("members", memberDAO.listDao());
-        }
-        return "admin/member/memberList"; // jsp 파일명
-    }
+ // [1] 관리자 메인 대시보드 페이지
+ @RequestMapping("/admin/member/main") 
+ public String adminMain(Model model) {
+     // 요약 정보를 위해 전체 회원 수 등을 모델에 담습니다.
+     model.addAttribute("memberCount", memberDAO.listDao().size());
+     
+     // 아까 만든 대시보드 JSP (adminMain.jsp)
+     return "admin/member/main"; 
+ }
 
-    @PostMapping("/admin/updateGrade")
-    public String updateGrade(@RequestParam("m_code") String m_code, 
-                               @RequestParam("m_grade") String m_grade) {
-        memberDAO.updateGradeDao(m_code, m_grade);
-        return "redirect:/admin/member/memberList"; // 주소 통일
-    }
+ // [2] 전체 회원 리스트 페이지
+ @RequestMapping("/admin/member/memberList") 
+ public String memberList(
+         @RequestParam(value="keyword", required=false) String keyword, 
+         Model model) {
+     
+     if (keyword != null && !keyword.isEmpty()) {
+         model.addAttribute("members", memberDAO.searchMembers(keyword));
+         model.addAttribute("keyword", keyword);
+     } else {
+         model.addAttribute("members", memberDAO.listDao());
+     }
+     // 리스트 전용 JSP (memberList.jsp)
+     return "admin/member/memberList"; 
+ }
 
-    @RequestMapping("/admin/view/{m_code}")
-    public String view(@PathVariable("m_code") String m_code, Model model) {
-        model.addAttribute("member", memberDAO.viewDao(m_code));
-        return "admin/member/memberView";
-    }
+ // [3] 회원 등급 수정
+ @PostMapping("/admin/updateGrade")
+ public String updateGrade(@RequestParam("m_code") String m_code, 
+                            @RequestParam("m_grade") String m_grade) {
+     memberDAO.updateGradeDao(m_code, m_grade);
+     return "redirect:/admin/member/memberList"; 
+ }
 
-    @PostMapping("/admin/delete")
-    public String adminDelete(@RequestParam("m_code") String m_code) {
-        memberDAO.deleteDao(m_code);
-        return "redirect:/admin/member/memberList"; // 주소 통일
-    }
+//141행 근처
+//[4] 회원 상세 보기
+//기존: @RequestMapping("/admin/member/view/{m_code}")
+//수정: 'view' 앞에 'member'를 붙여 'memberview'로 변경합니다.
+@RequestMapping("/admin/member/memberview/{m_code}")
+public String view(@PathVariable("m_code") String m_code, Model model) {
+  model.addAttribute("member", memberDAO.viewDao(m_code));
+  return "admin/member/memberView"; // 실제 JSP 파일 위치
+}
+
+ // [5] 관리자 권한으로 회원 삭제
+ @PostMapping("/admin/delete")
+ public String adminDelete(@RequestParam("m_code") String m_code) {
+     memberDAO.deleteDao(m_code);
+     return "redirect:/admin/member/memberList";
+ }
 }
