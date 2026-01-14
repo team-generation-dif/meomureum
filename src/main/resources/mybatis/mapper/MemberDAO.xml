@@ -41,6 +41,12 @@
         FROM MEMBER
         WHERE M_CODE = #{m_code}
     </select>
+    <select id="searchMembers" resultType="com.meomureum.springboot.dto.MemberDTO">
+    SELECT * FROM MEMBER 
+    WHERE M_NAME LIKE '%' || #{keyword} || '%' 
+       OR M_ID LIKE '%' || #{keyword} || '%'
+    ORDER BY M_CODE DESC
+</select>
 
     <update id="updateDao" parameterType="com.meomureum.springboot.dto.MemberDTO">
         UPDATE MEMBER

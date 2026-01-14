@@ -16,6 +16,8 @@ public interface INoticeDAO {
 
     // 공지사항 상세 내용 보기
     NoticeDTO getNoticeDetail(String notice_code);
+    
+    public List<NoticeDTO> searchNotices(String keyword);
 
     // 공지사항 작성
     int insertNotice(NoticeDTO noticeDto);

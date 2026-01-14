@@ -14,7 +14,7 @@ public interface IMemberDAO {
   	public int deleteDao(String m_code);      // 회원 탈퇴
     // 3. 로그인/상세조회
     public MemberDTO selectDAOById(String m_id);
-    
+    public List<MemberDTO> searchMembers(String keyword); // 검색 목록 (추가)
     // [추가] 관리자용 등급 수정 메서드
     public int updateGradeDao(String m_code, String m_grade);
 }

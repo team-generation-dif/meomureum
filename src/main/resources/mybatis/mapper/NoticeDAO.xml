@@ -6,9 +6,9 @@
     <insert id="insertNotice" parameterType="com.meomureum.springboot.dto.NoticeDTO">
         INSERT INTO NOTICE (
             NOTICE_CODE, NOTICE_TITLE, NOTICE_CONTENT, 
-            NOTICE_CATEGORY, NOTICE_DATE
+            NOTICE_CATEGORY, CREATED_AT
         ) VALUES (
-            'NOTI' || LPAD(NOTICE_SEQ.NEXTVAL, 4, '0'),
+            LPAD(NOTICE_SEQ.NEXTVAL, 7, '0'),
             #{notice_title},
             #{notice_content},
             #{notice_category},
@@ -16,12 +16,23 @@
         )
     </insert>
 
+    <select id="searchNotices" resultType="com.meomureum.springboot.dto.NoticeDTO">
+        SELECT * FROM NOTICE 
+        WHERE NOTICE_TITLE LIKE '%' || #{keyword} || '%' 
+           OR NOTICE_CONTENT LIKE '%' || #{keyword} || '%'
+        ORDER BY CREATED_AT DESC
+    </select>
+
     <select id="getAllNotices" resultType="com.meomureum.springboot.dto.NoticeDTO">
-        SELECT * FROM NOTICE ORDER BY NOTICE_DATE DESC
+        SELECT * FROM NOTICE ORDER BY CREATED_AT DESC
     </select>
 
     <select id="getNoticeDetail" resultType="com.meomureum.springboot.dto.NoticeDTO">
         SELECT * FROM NOTICE WHERE NOTICE_CODE = #{notice_code}
     </select>
+
+    <delete id="deleteNotice">
+        DELETE FROM NOTICE WHERE NOTICE_CODE = #{notice_code}
+    </delete>
 
 </mapper>
