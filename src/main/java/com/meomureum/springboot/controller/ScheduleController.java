@@ -1,7 +1,14 @@
 package com.meomureum.springboot.controller;
 
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -10,11 +17,13 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.meomureum.springboot.dao.IFileuploadDAO;
 import com.meomureum.springboot.dao.IMemberDAO;
 import com.meomureum.springboot.dao.INoteDAO;
 import com.meomureum.springboot.dao.IPlaceDAO;
 import com.meomureum.springboot.dao.IRouteDAO;
 import com.meomureum.springboot.dao.IScheduleDAO;
+import com.meomureum.springboot.dto.FileuploadDTO;
 import com.meomureum.springboot.dto.MemberDTO;
 import com.meomureum.springboot.dto.NoteDTO;
 import com.meomureum.springboot.dto.PlaceDTO;
@@ -36,7 +45,11 @@ public class ScheduleController {
 	IPlaceDAO placeDAO;
 	@Autowired
 	IMemberDAO memberDAO;
+	@Autowired
+	IFileuploadDAO fileuploadDAO;
 	
+	// 이미지파일(여행지) 저장 경로 고정
+	private final String uploadDir = "C:/upload/place/";
 	
 	@RequestMapping("/user/schedule/scheduleForm")
 	public String scheduleForm() {
@@ -145,18 +158,26 @@ public class ScheduleController {
 		}
 		// 5. 여행지 데이터를 가져오고, 루트 데이터 입력
 		String[] api_code = request.getParameterValues("api_code"); // API의 장소 고유 ID
+		
 	    if (api_code != null) {
 	        String[] r_day = request.getParameterValues("r_day");
 	        String[] r_order = request.getParameterValues("r_order");
 	        String[] r_memo = request.getParameterValues("r_memo");
 	        
 	        // 장소 상세 정보들
+	        String[] p_image_url = request.getParameterValues("p_image_url");
 	        String[] p_place = request.getParameterValues("p_place");
 	        String[] p_addr = request.getParameterValues("p_addr");
 	        String[] p_lat = request.getParameterValues("p_lat");
 	        String[] p_lon = request.getParameterValues("p_lon");
 	        String[] p_category = request.getParameterValues("p_category");
-
+	        
+	        // 이미지 저장할 폴더가 없으면 생성
+	        java.io.File dir = new java.io.File(uploadDir);
+	        if (!dir.exists()) {
+	            dir.mkdirs(); 
+	        }
+	        
 	        for (int i=0; i<api_code.length; i++) {
 	            // 1. 여행지 정보(Place) 저장 시도
 	        	// 이미 DB에 기록된 곳인지 확인
@@ -169,7 +190,7 @@ public class ScheduleController {
             	// 새로운 곳이라면 여행지 정보 저장 + 마이바티스 selectKey기능으로 넘김
 	            } else {
 	            	PlaceDTO placeDTO = new PlaceDTO();
-		            placeDTO.setApi_code(api_code[i]);
+		            placeDTO.setApi_code(api_code[i]); // TourAPI contentid
 		            placeDTO.setP_place(p_place[i]);
 		            placeDTO.setP_category(p_category[i]);
 		            placeDTO.setP_lat(Double.parseDouble(p_lat[i]));
@@ -178,6 +199,24 @@ public class ScheduleController {
 		            
 		            placeDAO.insertDAO(placeDTO);
 		            existingPCode = placeDTO.getP_code();
+		            
+		            // 이미지 다운로드 및 fileupload 테이블 저장 (신규 장소일 경우에만 수행)
+	                if (p_image_url != null && p_image_url.length > i && 
+	                    p_image_url[i] != null && !p_image_url[i].isEmpty()) {
+	                    
+	                    String savedFileName = saveImageFromUrl(p_image_url[i], uploadDir);
+	                    
+	                    if (savedFileName != null) {
+	                        //FileuploadDTO 생성 및 저장 (DTO 구조에 맞게 수정 필요)
+	                        FileuploadDTO fileDTO = new FileuploadDTO();
+	                        fileDTO.setTarget_type("PLACE");
+	                        fileDTO.setTarget_code(existingPCode);
+	                        fileDTO.setFile_name(savedFileName);
+	                        fileDTO.setFile_path("/upload/place/" + savedFileName);
+	                        fileDTO.setFile_order(1);
+	                        fileuploadDAO.insertFile(fileDTO);
+	                    }
+	                }
 	            }
 	            
 	            // 2. 루트 정보 생성 및 저장
@@ -193,5 +232,40 @@ public class ScheduleController {
 	    }
 		
 		return "redirect:/user/mypage/mySchedule";
+	}
+	
+	// 이미지를 URL에서 다운로드하여 저장하는 메소드
+	private String saveImageFromUrl(String imageUrl, String saveDir) {
+	    try {
+	        URL url = new URL(imageUrl);
+	        // 확장자 추출 (URL에 파라미터가 있거나 점이 없는 경우 대비)
+     			String extension = ".jpg"; // 기본값
+                int lastDotIndex = imageUrl.lastIndexOf(".");
+                 
+                // 점(.)이 있고, 뒤에 글자가 3~5자 이내일 때만 확장자로 인정 (예: .jpg, .jpeg, .png)
+                if (lastDotIndex != -1 && (imageUrl.length() - lastDotIndex) <= 6) {
+                     String extTemp = imageUrl.substring(lastDotIndex);
+                     // 쿼리스트링(?ver=1) 등이 붙어있을 수 있으므로 제거
+                     if(extTemp.contains("?")) {
+                         extTemp = extTemp.split("\\?")[0];
+                     }
+                      
+                     // 이미지 확장자가 맞는지 간단 체크
+                     if (extTemp.toLowerCase().matches(".*(jpg|jpeg|png|gif|bmp).*")) {
+                         extension = extTemp;
+                     }
+                }
+	        // 파일명 중복 방지하는 randomUUID() -> 필요할까..?
+	        String savedFileName = UUID.randomUUID().toString() + extension;
+	        Path targetPath = Paths.get(saveDir, savedFileName);
+	        
+	        try (InputStream in = url.openStream()) {
+	            Files.copy(in, targetPath, StandardCopyOption.REPLACE_EXISTING);
+	        }
+	        return savedFileName; // 저장된 파일명 반환
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return null;
+	    }
 	}
 }
