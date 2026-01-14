@@ -192,6 +192,26 @@ public class ScheduleController {
 	        }	
 	    }
 		
-		return "redirect:/user/mypage/mySchedule";
+		return "redirect:/user/mypage/main";
 	}
+	// 여행 계획 삭제 메서드
+		@RequestMapping("/user/schedule/deleteSchedule")
+		public String deleteSchedule(@RequestParam("s_code") String s_code) {
+			try {
+				// 1. 하위 데이터(노트, 루트)부터 삭제
+				noteDAO.deleteDAO(s_code);
+				routeDAO.deleteDAO(s_code);
+				
+				// 2. 메인 스케줄 삭제
+				scheduleDAO.deleteDAO(s_code);
+				
+				System.out.println("삭제 성공: " + s_code);
+			} catch (Exception e) {
+				System.out.println("삭제 중 오류 발생");
+				e.printStackTrace();
+			}
+			// 3. 다시 대시보드로 이동
+			return "redirect:/user/mypage/main";
+		}
+	
 }

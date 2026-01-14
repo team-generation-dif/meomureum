@@ -1,122 +1,160 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
 <title>FAQ 관리자 - 머무름</title>
 <style>
-    .container { width: 1000px; margin: 40px auto; font-family: 'Malgun Gothic', sans-serif; }
-    .title-area { border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 30px; }
-    .reg-box { background: #f9f9f9; padding: 25px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 40px; }
-    .reg-box h4 { margin-top: 0; color: #4CAF50; }
-    
-    /* 검색 영역 스타일 */
-    .search-area { margin-bottom: 20px; text-align: right; display: flex; justify-content: flex-end; gap: 5px; }
-    .search-input { padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 250px; }
-    .btn-search { padding: 8px 15px; background: #34495e; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    /* [1] 기본 레이아웃 및 폰트 */
+    body { background-color: #f8f9ff; margin: 0; font-family: 'Malgun Gothic', sans-serif; color: #333; }
+    .admin-main { padding: 40px; max-width: 1100px; margin: 0 auto; }
 
-    table { width: 100%; border-collapse: collapse; }
-    th { background: #f4f4f4; padding: 12px; border: 1px solid #ddd; }
-    td { padding: 12px; border: 1px solid #ddd; text-align: center; }
-    
-    /* 내용 보기(답변) 스타일 */
-    .content-row { display: none; background: #fcfcfc; text-align: left; }
-    .content-box { padding: 20px; line-height: 1.6; white-space: pre-wrap; border: 1px solid #eee; background-color: #fffdec; }
-    .title-link { color: #333; text-decoration: none; cursor: pointer; font-weight: bold; }
-    .title-link:hover { text-decoration: underline; color: #4CAF50; }
+    /* [2] 상단 헤더 정렬 */
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+    .table-title { font-size: 26px; font-weight: bold; color: #2d3436; }
+    .btn-home-back {
+        display: flex; align-items: center; gap: 8px;
+        padding: 10px 18px; background: white;
+        border: 1px solid #f1f3ff; border-radius: 15px;
+        text-decoration: none; font-weight: bold; color: #666;
+        box-shadow: 0 5px 15px rgba(162,155,254,0.1);
+        transition: 0.3s;
+    }
+    .btn-home-back:hover { background: #f1f3ff; color: #a29bfe; border-color: #a29bfe; }
 
-    .form-control { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-    .btn-submit { width: 100%; padding: 12px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
-    .btn-del { background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
-    .btn-home { text-decoration: none; padding: 10px 20px; background: #34495e; color: white; border-radius: 4px; font-weight: bold; font-size: 14px; }
+    /* [3] 등록 카드 (신규 등록) */
+    .reg-card { 
+        background: white; border-radius: 25px; padding: 30px; 
+        box-shadow: 0 10px 20px rgba(162,155,254,0.05); border: 1px solid #f1f3ff;
+        margin-bottom: 40px;
+    }
+    .reg-card h4 { margin: 0 0 20px 0; color: #a29bfe; font-size: 18px; display: flex; align-items: center; gap: 8px; }
+
+    /* [4] 검색 영역 */
+    .search-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .search-box { display: flex; gap: 10px; background: white; padding: 8px 15px; border-radius: 20px; border: 1px solid #f1f3ff; box-shadow: 0 5px 10px rgba(0,0,0,0.02); }
+    .search-input { border: none; background: transparent; padding: 5px; width: 220px; outline: none; }
+    .btn-search { background: #34495e; color: white; border: none; padding: 8px 18px; border-radius: 15px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+
+    /* [5] 리스트 카드 및 테이블 */
+    .content-card { background: white; border-radius: 30px; padding: 35px; box-shadow: 0 15px 35px rgba(0,0,0,0.03); border: 1px solid #f1f3ff; }
+    table { width: 100%; border-collapse: separate; border-spacing: 0; }
+    th { padding: 15px; color: #a2a2a2; font-size: 13px; text-transform: uppercase; border-bottom: 2px solid #f8f9ff; text-align: center; }
+    td { padding: 18px 10px; border-bottom: 1px solid #f8f9ff; text-align: center; font-size: 14px; color: #444; }
+    
+    /* FAQ 답변 열 스타일 */
+    .content-row { display: none; background: #fafaff; }
+    .content-box { padding: 25px; line-height: 1.8; white-space: pre-wrap; color: #555; font-size: 14px; text-align: left; background: #ffffff; margin: 10px; border-radius: 15px; border: 1px solid #f1f3ff; }
+    
+    /* 요소별 스타일 */
+    .form-control { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #eee; border-radius: 12px; outline: none; font-family: inherit; transition: 0.3s; }
+    .form-control:focus { border-color: #a29bfe; box-shadow: 0 0 0 3px rgba(162,155,254,0.1); }
+    .btn-submit { width: 100%; padding: 14px; background: #a29bfe; color: white; border: none; border-radius: 12px; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.3s; }
+    .btn-submit:hover { background: #6c5ce7; transform: translateY(-2px); }
+    
+    .title-link { color: #333; text-decoration: none; cursor: pointer; font-weight: bold; transition: 0.2s; }
+    .title-link:hover { color: #a29bfe; }
+    
+    .category-badge { padding: 5px 12px; background: #e1e5ff; color: #a29bfe; border-radius: 10px; font-size: 12px; font-weight: bold; }
+    .btn-del { background: #ff7675; color: white; border: none; padding: 7px 15px; border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+    .btn-del:hover { background: #d63031; }
 </style>
 <script>
-    // 질문 클릭 시 답변 내용을 펼치고 닫는 함수
     function toggleFaq(code) {
         const contentRow = document.getElementById('faq-' + code);
         if (contentRow.style.display === 'table-row') {
             contentRow.style.display = 'none';
         } else {
+            // 다른 열 닫기 (선택사항)
+            document.querySelectorAll('.content-row').forEach(row => row.style.display = 'none');
             contentRow.style.display = 'table-row';
         }
     }
 </script>
 </head>
 <body>
-<div class="container">
-    <div class="title-area" style="display: flex; justify-content: space-between; align-items: center;">
-        <h2>⚙️ 자주 묻는 질문(FAQ) 관리</h2>
-        <a href="/admin/member/memberList" class="btn-home">🏠 메인으로</a>
+
+<div class="admin-main">
+    <div class="page-header">
+        <h1 class="table-title">⚙️ FAQ 관리</h1>
+        <a href="/admin/member/main" class="btn-home-back">🏠 관리자 메인</a>
     </div>
 
-    <div class="reg-box">
-        <h4>[신규 FAQ 등록]</h4>
+    <div class="reg-card">
+        <h4><span style="font-size: 20px;">✍️</span> 신규 FAQ 등록</h4>
         <form action="/admin/faq/insert" method="post">
             <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
-            <select name="faq_category" class="form-control" style="width: 150px;">
-                <option value="회원가입">회원가입</option>
-                <option value="게시판">게시판</option>
-                <option value="커뮤니티">커뮤니티</option>
-                <option value="계정관리">게정관리</option>
-                <option value="이용안내">이용안내</option>
-                <option value="기타">기타</option>
-            </select>
-            <input type="text" name="faq_title" class="form-control" placeholder="질문 내용을 입력하세요" required>
-            <textarea name="faq_content" class="form-control" style="height: 120px;" placeholder="답변 내용을 입력하세요" required></textarea>
+            <div style="display: flex; gap: 15px; align-items: flex-start;">
+                <select name="faq_category" class="form-control" style="width: 200px; flex-shrink: 0;">
+                    <option value="회원가입">회원가입</option>
+                    <option value="게시판">게시판</option>
+                    <option value="커뮤니티">커뮤니티</option>
+                    <option value="계정관리">계정관리</option>
+                    <option value="이용안내">이용안내</option>
+                    <option value="기타">기타</option>
+                </select>
+                <div style="flex-grow: 1;">
+                    <input type="text" name="faq_title" class="form-control" placeholder="질문 내용을 입력하세요" required>
+                    <textarea name="faq_content" class="form-control" style="height: 100px; resize: none;" placeholder="답변 내용을 입력하세요" required></textarea>
+                </div>
+            </div>
             <button type="submit" class="btn-submit">FAQ 등록하기</button>
         </form>
     </div>
 
-    <div class="search-area">
-        <form action="/admin/faq/faqManage" method="get" style="display: flex; gap: 5px;">
+    <div class="search-row">
+        <h4 style="margin:0; color: #2d3436;">📑 등록된 FAQ 리스트</h4>
+        <form action="/admin/faq/faqManage" method="get" class="search-box">
             <input type="text" name="keyword" class="search-input" placeholder="질문 또는 답변 검색" value="${param.keyword}">
             <button type="submit" class="btn-search">검색</button>
         </form>
     </div>
 
-    <h4>[등록된 FAQ 리스트]</h4>
-    <table>
-        <thead>
-            <tr>
-                <th width="12%">카테고리</th>
-                <th width="53%">질문 (클릭 시 답변 보기)</th>
-                <th width="20%">등록일</th>
-                <th width="15%">관리</th>
-            </tr>
-        </thead>
-        <tbody>
-            <c:if test="${empty faqList}">
-                <tr><td colspan="4">등록된 FAQ가 없습니다.</td></tr>
-            </c:if>
-            <c:forEach var="faq" items="${faqList}">
+    <div class="content-card">
+        <table>
+            <thead>
                 <tr>
-                    <td><b>${faq.faq_category}</b></td>
-                    <td style="text-align: left;">
-                        <span class="title-link" onclick="toggleFaq('${faq.faq_code}')">
-                            Q. ${faq.faq_title}
-                        </span>
-                    </td>
-                    <td>${faq.created_at}</td>
-                    <td>
-                        <form action="/admin/faq/delete" method="post" onsubmit="return confirm('정말 삭제하시겠습니까?');">
-                            <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
-                            <input type="hidden" name="faq_code" value="${faq.faq_code}">
-                            <button type="submit" class="btn-del">삭제</button>
-                        </form>
-                    </td>
+                    <th width="15%">카테고리</th>
+                    <th width="50%">질문 (클릭 시 답변 보기)</th>
+                    <th width="20%">등록일</th>
+                    <th width="15%">관리</th>
                 </tr>
-                <tr id="faq-${faq.faq_code}" class="content-row">
-                    <td colspan="4">
-                        <div class="content-box">
-                            <strong>[A. 답변 내용]</strong><br><br>
-                            ${faq.faq_content}
-                        </div>
-                    </td>
-                </tr>
-            </c:forEach>
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                <c:if test="${empty faqList}">
+                    <tr><td colspan="4" style="padding: 100px; color: #ccc;">등록된 FAQ가 존재하지 않습니다.</td></tr>
+                </c:if>
+                <c:forEach var="faq" items="${faqList}">
+                    <tr class="main-row">
+                        <td><span class="category-badge">${faq.faq_category}</span></td>
+                        <td style="text-align: left; padding-left: 20px;">
+                            <span class="title-link" onclick="toggleFaq('${faq.faq_code}')">
+                                Q. ${faq.faq_title}
+                            </span>
+                        </td>
+                        <td style="color: #999; font-size: 13px;">${faq.created_at}</td>
+                        <td>
+                            <form action="/admin/faq/delete" method="post" onsubmit="return confirm('정말 삭제하시겠습니까?');">
+                                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
+                                <input type="hidden" name="faq_code" value="${faq.faq_code}">
+                                <button type="submit" class="btn-del">삭제</button>
+                            </form>
+                        </td>
+                    </tr>
+                    <tr id="faq-${faq.faq_code}" class="content-row">
+                        <td colspan="4">
+                            <div class="content-box">
+                                <div style="color: #a29bfe; font-weight: bold; margin-bottom: 10px;">[A. 답변 내용]</div>
+                                ${faq.faq_content}
+                            </div>
+                        </td>
+                    </tr>
+                </c:forEach>
+            </tbody>
+        </table>
+    </div>
 </div>
+
 </body>
 </html>
