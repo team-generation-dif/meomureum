@@ -13,4 +13,5 @@ public interface IReportDAO {
     List<ReportDTO> listIgnoredReports(@Param("startRow") int startRow, @Param("endRow") int endRow);
     void updateReportStatus(ReportDTO dto); //처리 상태 업데이트 메서드 추가
     ReportDTO findReportByCode(String rep_code);
+    List<ReportDTO> listReports();
 }
