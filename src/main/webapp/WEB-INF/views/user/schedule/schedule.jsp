@@ -120,7 +120,7 @@
     }
 	
     #s_name {
-        font-size: 1.2rem;
+        font-size: 1.4rem;
         font-weight: bold;
         color: var(--primary-color);
         border: none;
@@ -277,6 +277,7 @@
 				<c:if test="${mode == 'new'}">
 					<input type="hidden" name="mode" value="${mode}">
 					<div id="">
+						<button type="button" style="color: #6c5ce7;" onclick="location.href='/user/mypage/main'">메인으로</button>
 						<div><input type="text" name="s_name" id="s_name" value="To ${p_name}"></div>
 						<div>
 							<input type="text" id="dateSchedule" placeholder="여행 기간을 선택하세요" readonly>

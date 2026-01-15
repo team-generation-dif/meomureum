@@ -265,7 +265,7 @@
             });
     }
     
-	// TourAPI 상세 정보(공통+소개) 가져오는 함수
+	// TourAPI 상세 정보(공통+소개) 가져오는 함수(비동기)
     async function getPlaceDetails(contentId, contentTypeId) {
         // 공통정보(개요, 홈페이지) URL
         const commonUrl = `https://apis.data.go.kr/B551011/KorService2/detailCommon2?serviceKey=\${TOUR_API_KEY}&MobileOS=ETC&MobileApp=Meomureum&_type=json&contentId=\${contentId}&defaultYN=Y&overviewYN=Y`;
