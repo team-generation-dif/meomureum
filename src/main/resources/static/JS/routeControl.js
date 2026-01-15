@@ -65,12 +65,18 @@ function addRoute(day, place) {
     li.className = "r_item";
     
     li.innerHTML = `
-    	<strong>${place.place_name}</strong>
-		<input type="button" value="▲" onclick="moveUpNote(this); setOrder();">
-		<input type="button" value="▼" onclick="moveDownNote(this); setOrder();">
+		<div class="r_item_header">
+	    	<strong>${place.place_name}</strong>
+			<div>
+				<input type="button" value="▲" onclick="moveUpNote(this); setOrder();">
+				<input type="button" value="▼" onclick="moveDownNote(this); setOrder();">
+			</div>
+		</div>
 		<br>
         <input type="text" name="r_memo" placeholder="메모 입력">
-        <input type="button" value="X" onclick="this.closest('.r_item').remove(); setOrder();">
+		<div class="item_x">
+        	<input type="button" value="X" onclick="this.closest('.r_item').remove(); setOrder();">
+		</div>
         <input type="hidden" name="r_day" value="${day}">
         <input type="hidden" name="r_order">
         
