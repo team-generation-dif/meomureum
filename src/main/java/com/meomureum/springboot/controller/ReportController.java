@@ -1,11 +1,15 @@
 package com.meomureum.springboot.controller;
 
 import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.meomureum.springboot.dao.IBoardDAO;
 import com.meomureum.springboot.dao.IMemberDAO;
@@ -28,25 +32,43 @@ public class ReportController {
 
     // 📍 관리자: 신고 목록 조회
     @GetMapping("/admin/board/listreports")
-    public String listReports(@RequestParam(name = "page", defaultValue = "1") int page,
+    public String listReports(@RequestParam(name="status", defaultValue="PENDING") String status,
+    						  @RequestParam(name = "page", defaultValue = "1") int page,
             				  @RequestParam(name = "size", defaultValue = "10") int size,
             				  @RequestParam(name="keyword", required=false) String keyword,
             			      Model model) {
     	int startRow = (page - 1) * size + 1;
         int endRow = page * size;
+        
+        List<ReportDTO> reports;
+        int totalReports = 0;
+        
+        // 상태별 분기
+        if ("DONE".equalsIgnoreCase(status)) {
+            reports = reportDAO.listDoneReports(startRow, endRow, keyword);
+            totalReports = reportDAO.countDoneReports(keyword);
+        } else if ("IGNORE".equalsIgnoreCase(status)) {
+            reports = reportDAO.listIgnoredReports(startRow, endRow, keyword);
+            totalReports = reportDAO.countIgnoredReports(keyword);
+        } else {
+            reports = reportDAO.listPendingReports(startRow, endRow, keyword);
+            totalReports = reportDAO.countPendingReports(keyword);
+            status = "PENDING"; // 기본값
+        }
 
-        List<ReportDTO> pendingReports = reportDAO.listPendingReports(startRow, endRow, keyword);
-        int totalReports = reportDAO.countPendingReports(keyword);
         int totalPages = (int) Math.ceil((double) totalReports / size);
 
-        model.addAttribute("pendingReports", pendingReports);
+        // 모델에 담기
+        model.addAttribute("reports", reports);
         model.addAttribute("currentPage", page);
         model.addAttribute("pageSize", size);
         model.addAttribute("totalPages", totalPages);
         model.addAttribute("keyword", keyword);
+        model.addAttribute("status", status);
 
         return "admin/board/listReports";
     }
+
 
     // 신고 처리 (예: 삭제)
     @PostMapping("/admin/board/listreports/process")
