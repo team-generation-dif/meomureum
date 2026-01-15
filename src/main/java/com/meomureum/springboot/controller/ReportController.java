@@ -30,21 +30,22 @@ public class ReportController {
     @GetMapping("/admin/board/listreports")
     public String listReports(@RequestParam(name = "page", defaultValue = "1") int page,
             				  @RequestParam(name = "size", defaultValue = "10") int size,
+            				  @RequestParam(name="keyword", required=false) String keyword,
             			      Model model) {
     	int startRow = (page - 1) * size + 1;
         int endRow = page * size;
 
-        model.addAttribute("pendingReports", reportDAO.listPendingReports(startRow, endRow));
-        model.addAttribute("doneReports", reportDAO.listDoneReports(startRow, endRow));
-        model.addAttribute("ignoredReports", reportDAO.listIgnoredReports(startRow, endRow));
-        // doneReports, ignoredReports도 동일하게 처리
+        List<ReportDTO> pendingReports = reportDAO.listPendingReports(startRow, endRow, keyword);
+        int totalReports = reportDAO.countPendingReports(keyword);
+        int totalPages = (int) Math.ceil((double) totalReports / size);
 
+        model.addAttribute("pendingReports", pendingReports);
         model.addAttribute("currentPage", page);
         model.addAttribute("pageSize", size);
-        model.addAttribute("totalPages", 10); // 실제 전체 페이지 수 계산해서 넣어야 함
+        model.addAttribute("totalPages", totalPages);
+        model.addAttribute("keyword", keyword);
 
         return "admin/board/listReports";
-
     }
 
     // 신고 처리 (예: 삭제)

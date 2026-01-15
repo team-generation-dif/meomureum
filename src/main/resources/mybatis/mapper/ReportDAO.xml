@@ -33,19 +33,36 @@
         created_at DESC
     </select>
     
-    <!-- 대기중 신고 -->
-    <select id="listPendingReports" resultType="com.meomureum.springboot.dto.ReportDTO">
-        SELECT * FROM (
-            SELECT inner.*, ROWNUM AS rnum
-            FROM (
-                SELECT * FROM report 
-                WHERE rep_status = 'PENDING'
-                ORDER BY created_at DESC
-            ) inner
-            WHERE ROWNUM &lt;= #{endRow}
-        )
-        WHERE rnum &gt;= #{startRow}
-    </select>
+    <!-- 대기중 신고 리스트 (검색 + 페이징) -->
+	<select id="listPendingReports" parameterType="map" resultType="com.meomureum.springboot.dto.ReportDTO">
+    	SELECT *
+    	FROM (
+        	SELECT ROWNUM AS rnum, A.*
+        	FROM (
+            	SELECT *
+            	FROM report
+            	WHERE (rep_status IS NULL OR rep_status = 'PENDING')
+            	<if test="keyword != null and keyword != ''">
+                	AND (rep_title LIKE '%' || #{keyword} || '%' 
+                 	OR rep_content LIKE '%' || #{keyword} || '%')
+            	</if>
+            	ORDER BY rep_code DESC
+        	) A
+        	WHERE ROWNUM &lt;= #{endRow}
+    	)
+    	WHERE rnum &gt;= #{startRow}
+	</select>
+
+	<!-- 대기중 신고 건수 -->
+	<select id="countPendingReports" parameterType="map" resultType="int">
+    	SELECT COUNT(*)
+    	FROM report
+    	WHERE (rep_status IS NULL OR rep_status = 'PENDING')
+    	<if test="keyword != null and keyword != ''">
+        	AND (rep_title LIKE '%' || #{keyword} || '%' 
+         	OR rep_content LIKE '%' || #{keyword} || '%')
+    	</if>
+	</select>
 
     <!-- 처리 완료 신고 -->
     <select id="listDoneReports" resultType="com.meomureum.springboot.dto.ReportDTO">
@@ -80,7 +97,18 @@
     	SELECT rep_code, rep_category, m_code, rep_title, rep_content, target_code, created_at, rep_status
     	FROM report
    		WHERE rep_code = #{rep_code}
+	 </select>
+	 
+	<!-- 신고 건수용 추가 -->
+	<select id="countReportsByStatus" parameterType="String" resultType="int">
+    	SELECT COUNT(*) 
+    	FROM report 
+    	WHERE rep_status = #{status}
 	</select>
+     <!-- 전체 신고 건수 -->
+    <select id="countAllReports" resultType="int">
+    	SELECT COUNT(*) FROM report
+	</select>     
                
     <!-- 신고 상태 업데이트 -->
     <update id="updateReportStatus" parameterType="com.meomureum.springboot.dto.ReportDTO">
