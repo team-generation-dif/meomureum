@@ -10,6 +10,11 @@
 </head>
 <body>
 <div class="container">
+<!-- 검색창 -->
+<form method="get" action="/admin/board/listreports" class="form-inline" style="margin-bottom:15px;">
+    <input type="text" name="keyword" value="${keyword}" class="form-control" placeholder="검색어 입력">
+    <button type="submit" class="btn btn-primary">검색</button>
+</form>
 
 <h3>대기중 신고</h3>
 <table class="table table-bordered table-hover">
@@ -97,8 +102,8 @@
 <!-- 아래에 페이지네이션 추가 -->
 <div class="pagination">
     <c:forEach begin="1" end="${totalPages}" var="i">
-        <a href="/admin/board/listreports?page=${i}&size=${pageSize}" 
-           class="${i == currentPage ? 'active' : ''}">${i}</a>
+        <a href="/admin/board/listreports?page=${i}&size=${pageSize}&keyword=${keyword}" 
+   			class="${i == currentPage ? 'active' : ''}">${i}</a>
     </c:forEach>
 </div>
 </div>

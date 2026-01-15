@@ -305,17 +305,26 @@ public String view(@PathVariable("m_code") String m_code, Model model) {
      memberDAO.deleteDao(m_code);
      return "redirect:/admin/member/memberList";
  }
-//[6] 신고 리스트 페이지 (추가)
+//[6] 신고 리스트 페이지 (수정)
 @RequestMapping("/admin/board/listReports")
-public String listReports(Model model) {
-  // 1. 모든 신고 데이터 가져오기 (IReportDAO 사용)
-  List<ReportDTO> reportList = reportDAO.listReports(); // 메서드명은 DAO에 맞게 확인 필요
-  
-  // 2. 모델에 담기
-  model.addAttribute("reports", reportList);
-  
-  // 3. JSP 페이지로 이동
-  // 실제 해당 JSP 파일이 /WEB-INF/views/admin/board/listReports.jsp 경로에 있어야 합니다.
-  return "admin/board/listReports"; 
-}
+public String listReports(@RequestParam(name="page", defaultValue="1") int page,
+                          @RequestParam(name="size", defaultValue="10") int size,
+                          @RequestParam(name="keyword", required=false) String keyword,
+                        Model model) {
+  int startRow = (page - 1) * size + 1;
+  int endRow = page * size;
+
+  // 상태별로 DAO 호출
+  List<ReportDTO> pendingReports = reportDAO.listPendingReports(startRow, endRow, keyword);
+  int totalReports = reportDAO.countPendingReports(keyword);
+  int totalPages = (int) Math.ceil((double) totalReports / size);
+
+  model.addAttribute("pendingReports", pendingReports);
+  model.addAttribute("currentPage", page);
+  model.addAttribute("pageSize", size);
+  model.addAttribute("totalPages", totalPages);
+  model.addAttribute("keyword", keyword);
+
+  return "admin/board/listReports";
+	}
 }
