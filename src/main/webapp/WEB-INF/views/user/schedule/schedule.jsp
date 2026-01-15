@@ -15,96 +15,257 @@
 <script src="/JS/scheduleOrder.js"></script>
 
 <style>
+	/* 대시보드(user/mypage/main.jsp)의 컬러 정보 참조 */
+	:root {
+        --primary-color: #a29bfe;
+        --primary-hover: #6c5ce7;
+        --bg-color: #f8f9ff;
+        --text-color: #2d3436;
+        --border-color: #f1f3ff;
+        --shadow-soft: 0 10px 30px rgba(162, 155, 254, 0.05);
+    }
+
+	body {
+        font-family: 'Pretendard', sans-serif;
+        margin: 0;
+        padding: 0;
+        color: var(--text-color);
+        background-color: var(--bg-color);
+        overflow: hidden; /* 전체 스크롤 방지 */
+    }
+	
 	.container {
 	    display: flex;
 	    width: 100vw;
-	    height: 100vh;
+	    height: calc(100vh - 70px);
 	    overflow: hidden;
 	}
 	
-	.pane { height: 100%; overflow-y: auto; background: white; }
+	.pane { height: 100%; overflow-y: auto; background: white; box-sizing: border-box;}
 	
 	#sidebar { width: 200px; min-width: 100px; }
-	#left-content { flex: 1; min-width: 300px; border-left: 1px solid #ddd; }
+	#left-content { 
+	    flex: 1; 
+	    min-width: 350px; 
+	    background-color: var(--bg-color); /* 배경색 */
+	    padding: 20px 20px 100px 20px;
+	    display: block; 
+	    overflow-y: auto; 
+	}
+	#left-content form {
+	    height: auto; /* 높이를 내용물에 맞춤 */
+	    min-height: 100%; /* 최소한 화면만큼은 채움 */
+	    display: flex;
+	    flex-direction: column;
+	    gap: 15px; /* 요소 간 간격 */
+	}
+	
 	#right-side { width: 40%; min-width: 200px; position: relative; }
 	
 	.resizer {
-	    width: 6px;
-	    cursor: col-resize;
-	    background: #f1f1f1;
-	    transition: background 0.2s;
-	    z-index: 10;
-	}
-	.resizer:hover { background: #007bff; }
+        width: 5px;
+        cursor: col-resize;
+        background: transparent;
+        transition: background 0.2s;
+        z-index: 10;
+    }
+    .resizer:hover { background: var(--primary-color); }
 	
-	.nav-group h4 {
-	    font-size: 14px;
-	    color: #666;
-	    margin: 20px 0 10px 15px;
+	/* [입력 폼 스타일] */
+    input[type="text"], textarea {
+        width: 100%;
+        padding: 12px 15px;
+        border: 1px solid #dfe6e9;
+        border-radius: 12px;
+        font-family: inherit;
+        font-size: 0.95rem;
+        box-sizing: border-box;
+        transition: 0.2s;
+        background: white;
+    }
+    
+    input[type="text"]:focus, textarea:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(162, 155, 254, 0.1);
+    }
+
+    textarea {
+        resize: vertical;
+        min-height: 80px;
+        line-height: 1.5;
+    }
+	
+	/* 제목 입력 스타일 */
+    #s_name {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: var(--primary-color);
+        border: none;
+        background: transparent;
+        padding: 10px 0;
+        border-bottom: 2px solid var(--border-color);
+        border-radius: 0;
+    }
+    
+    #s_name:focus { 
+    	box-shadow: none; 
+    	border-bottom-color: var(--primary-color); 
+   	}
+   	
+	/* [버튼 스타일] - 대시보드 btn-add 스타일 적용 */
+    input[type="button"], input[type="submit"], button {
+        background-color: white;
+        border: 1px solid #dfe6e9;
+        color: #636e72;
+        padding: 8px 16px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+        font-family: 'Pretendard', sans-serif;
+    }
+    
+    input[type="button"] {
+    	
+    }
+
+    input[type="button"]:hover, button:hover {
+        background-color: #f1f3ff;
+        color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+
+    /* 메인 액션 버튼 (저장, 새 노트 등) */
+    input[type="submit"], input[value="새 노트 작성"] {
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        width: 100%;
+        margin-top: 10px;
+        box-shadow: 0 4px 10px rgba(162, 155, 254, 0.3);
+    }
+    
+    input[type="submit"]:hover, input[value="새 노트 작성"]:hover {
+        background: var(--primary-hover);
+        transform: translateY(-2px);
+    }
+
+    /* [카드 아이템 스타일] - 노트/루트 */
+    .n_item, .r_item {
+        background: white;
+        border-radius: 20px;
+        padding: 20px;
+        margin-bottom: 15px;
+        box-shadow: var(--shadow-soft);
+        border: 1px solid var(--border-color);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .n_item:hover, .r_item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(162, 155, 254, 0.15);
+        border-color: var(--primary-color);
+    }
+
+	.r_item > input[type="text"] {
+		margin: 0px 0px 10px 0px;
 	}
 	
-	.nav-item {
-		display: block;
-	    width: calc(100% - 30px);
-	    margin: 5px 15px;
-	    padding: 12px;
-	    text-align: left;
-	    background-color: #f8f9fa;
-	    border: 1px solid #e9ecef;
-	    border-radius: 6px;
-	    cursor: pointer;
-	    font-size: 13px;
-	    transition: all 0.2s;
-	    white-space: nowrap;
-	    overflow: hidden;
-	    text-overflow: ellipsis;
+    .r_day {
+        margin-bottom: 30px;
+    }
+    
+    .r_day h4 {
+        font-size: 1.1rem;
+        color: var(--primary-color);
+        margin: 0 0 15px 5px;
+        font-weight: 700;
+    }
+
+	.route_list {
+	    list-style: none; /* 글머리 기호(검은 점) 제거 */
+	    padding: 0;
+	    margin: 0;
 	}
 	
-	.nav-item:hover {
-	    background-color: #e7f1ff;
-	    border-color: #007bff;
-	    color: #007bff;
-	}
+    /* 노트 내 장소 정보 카드 */
+    .note-place-info {
+        display: flex;
+        gap: 15px;
+        background-color: #fafaff;
+        border: 1px dashed #dce0ff;
+        border-radius: 15px;
+        padding: 12px;
+        margin-bottom: 12px;
+    }
+    
+    .note-place-info img {
+        width: 70px;
+        height: 70px;
+        object-fit: cover;
+        border-radius: 12px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    
+    .note-place-info .info-text {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        font-size: 0.85rem;
+        color: #636e72;
+    }
+    
+    .note-place-info .info-addr {
+        font-weight: bold;
+        color: #2d3436;
+        margin-bottom: 4px;
+    }
 	
+    /* 조작 버튼 그룹 (▲ ▼ X) */
+    .control-btns {
+        display: flex;
+        gap: 5px;
+        margin-bottom: 10px;
+        justify-content: flex-end;
+    }
+    
+    .control-btns-with-title {
+    	display: flex;
+    	margin-bottom: 8px;
+    	gap: 5px; 
+    	align-items: center; 
+    }
+    
+    .control-btns-with-title input[type="text"] {
+    	flex: 1; 
+    }
+    
+    .control-btns input[type="button"] {
+        padding: 4px 8px;
+        font-size: 0.5rem;
+        border-radius: 6px;
+    }
+    
+    .r_item_header {
+    	display: flex;
+    	justify-content: space-between; /* 두 부분으로 구분해서 양쪽 끝 정렬 */
+    	align-items: center;
+    }
+    
+    .item_x {
+    	display: flex;
+    	justify-content: flex-end; /* 오른쪽 정렬 */
+    }
+    
 	.sortable-ghost {
-	    opacity: 0.4;
+	    opacity: 0.6;
 	    background-color: #cfe2ff !important;
 	}
 	
-	/* 노트 내 장소 정보 카드 스타일 */
-	.note-place-info {
-	    display: flex;
-	    gap: 10px;
-	    background-color: #f8f9fa;
-	    border: 1px solid #e9ecef;
-	    border-radius: 5px;
-	    padding: 10px;
-	    margin-bottom: 10px; /* textarea와 간격 */
-	}
-	
-	.note-place-info img {
-	    width: 80px;
-	    height: 80px;
-	    object-fit: cover;
-	    border-radius: 4px;
-	    border: 1px solid #ddd;
-	}
-	
-	.note-place-info .info-text {
-	    flex: 1;
-	    display: flex;
-	    flex-direction: column;
-	    justify-content: center;
-	    font-size: 12px;
-	    line-height: 1.5;
-	    color: #555;
-	}
-	
-	.note-place-info .info-addr {
-	    font-weight: bold;
-	    color: #333;
-	    margin-bottom: 4px;
-	}
 </style>
 <meta charset="UTF-8">
 <title>머무름 - 당신의 여행 계획</title>
@@ -165,7 +326,7 @@
 						<div id="n_container">
 							<c:forEach var="note" items="${noteDTO}">
 				                <div class="n_item">
-				                    <div>
+				                    <div class="control-btns-with-title">
 				                        <input type="text" name="n_title" value="${note.n_title}">
 				                        <input type="button" value="▲" onclick="moveUpNote(this); setOrder();">
 				                        <input type="button" value="▼" onclick="moveDownNote(this); setOrder();">
@@ -202,7 +363,9 @@
 							        <input type="hidden" name="n_p_y" value="0">
 				                    <textarea name="n_content">${note.n_content}</textarea>
 				                    <input type="hidden" name="n_order" value="${note.n_order}">
-				                    <input type="button" value="노트 삭제" onclick="deleteNote(this)">
+				                    <div class="item_x">
+				                   		<input type="button" value="노트 삭제" onclick="deleteNote(this)">
+				                    </div>
 				                </div>
 				            </c:forEach>
 			            </div>
@@ -219,12 +382,18 @@
 										<c:forEach var="route" items="${routeDTO}">
 											<c:if test="${route.r_day == dayNum}">
 												<li class="r_item">
-													<strong>${route.p_place}</strong>
-													<input type="button" value="▲" onclick="moveUpNote(this); setOrder();">
-													<input type="button" value="▼" onclick="moveDownNote(this); setOrder();">
+													<div class="r_item_header">
+														<strong>${route.p_place}</strong>
+														<div>
+															<input type="button" value="▲" onclick="moveUpNote(this); setOrder();">
+															<input type="button" value="▼" onclick="moveDownNote(this); setOrder();">
+														</div>
+													</div>
 													<br>
 											        <input type="text" name="r_memo" value="${route.r_memo}" placeholder="메모 입력">
-											        <input type="button" value="X" onclick="this.closest('.r_item').remove(); setOrder();">
+											        <div class="item_x">
+											        	<input type="button" value="X" onclick="this.closest('.r_item').remove(); setOrder();">
+											        </div>
 											        <input type="hidden" name="r_day" value="${route.r_day}">
 											        <input type="hidden" name="r_order" value="${route.r_order}">
 											        
@@ -248,14 +417,16 @@
 				<input type="submit" value="계획 저장">
 				<script type="text/template" id="n_template">
 					<div>
-						<div>
+						<div class="control-btns-with-title">
 							<input type="text" name="n_title" placeholder="새로운 경험을 작성하세요">
 							<input type="button" value="▲" onclick="moveUpNote(this); setOrder();">
 							<input type="button" value="▼" onclick="moveDownNote(this); setOrder();">
 						</div>
 						<textarea name="n_content"></textarea>
 						<input type="hidden" name="n_order">
-						<input type="button" value="노트 삭제" onclick="deleteNote(this)">
+						<div class="item_x">
+							<input type="button" value="노트 삭제" onclick="deleteNote(this)">
+						</div>
 					</div>
 				</script>
 			</form>
@@ -307,8 +478,8 @@
 	        <%@ include file="mapAreaTest.jsp" %>
 	    </div>
 	</div>
-	<!-- 카카오맵 대응 리사이저 설정(지도 깨짐 방지), 사이드바|리사이저|스케쥴러|리사이저|지도 구조로 나눈다. -->
 	<script>
+		// 카카오맵 대응 리사이저 설정(지도 깨짐 방지), 사이드바|리사이저|스케쥴러|리사이저|지도 구조로 나눈다. 
 		// 문서가 로딩되면 적용되는 스크립트 (사이드바 초기화)
 		document.addEventListener("DOMContentLoaded", function() {
 		    initResizer("resizer-sidebar", "sidebar", "left-to-right"); // 왼쪽에서 오른쪽으로 조절

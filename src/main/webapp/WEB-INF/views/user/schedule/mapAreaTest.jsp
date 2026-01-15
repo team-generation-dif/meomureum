@@ -1,214 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<style>
-    /* 0. 전체 레이아웃: include될 것을 고려하여 여백 제거 */
-    body, html {margin:0; padding:0; width:100%; height:100%; overflow:hidden;}
-    
-    .map_wrap {position:relative; width:100%; height:100%;}
-    #map {width:100%; height:100%; position:relative; overflow:hidden;}
-    
-	/* 1. 목록 스타일 (토글 기능 포함) */
-    #menu_wrap {
-        position: absolute;
-        top: 10px; left: 10px; bottom: 30px;
-        width: 250px;
-        padding: 5px;
-        overflow-y: auto;
-        background: rgba(255, 255, 255, 0.95);
-        z-index: 2;
-        font-size: 12px;
-        border-radius: 5px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        transition: transform 0.3s ease-in-out; /* 부드러운 전환 */
-    }
-    
-    /* 목록 숨김 클래스 */
-    #menu_wrap.hidden { transform: translateX(-270px); }
-    
-    /* 목록 토글 버튼 */
-    #toggle_btn {
-        position: absolute;
-        top: 10px; left: 270px; /* 메뉴 너비 + 여백 */
-        width: 25px; height: 50px;
-        background: white;
-        z-index: 2;
-        border: 1px solid #ccc;
-        border-radius: 0 5px 5px 0;
-        cursor: pointer;
-        display: flex; align-items: center; justify-content: center;
-        transition: left 0.3s ease-in-out;
-        box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-    }
-    /* 메뉴가 숨겨지면 버튼도 이동 */
-    #toggle_btn.hidden { left: 0; } 
 
-    /* 2. 카테고리 버튼 스타일 (지도 상단 중앙) */
-    .category_bar {
-        position: absolute; top: 10px; left: 50%;
-        transform: translateX(-50%);
-        z-index: 2;
-        background: white;
-        padding: 5px 10px;
-        border-radius: 20px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        display: flex; gap: 5px;
-    }
-    .cat_btn {
-        border: 1px solid #ddd; background: #fff;
-        padding: 5px 12px; border-radius: 15px;
-        font-size: 12px; cursor: pointer;
-    }
-    .cat_btn:hover, .cat_btn.active { background: #007bff; color: white; border-color: #007bff; }
-	
-	.note-add-btn {
-	    border: 1px solid #28a745; /* 녹색 테두리 */
-	    background: white; 
-	    color: #28a745; /* 녹색 글자 */
-	    padding: 2px 8px; 
-	    font-size: 11px; 
-	    cursor: pointer; 
-	    border-radius: 3px;
-	    transition: all 0.2s;
-	    font-weight: bold;
-	}
-	
-	.note-add-btn:hover {
-	    background: #28a745; 
-	    color: white;
-	}
-	
-    /* 3. 목록 아이템 스타일 (카드형 디자인 적용) */
-    #placesList { padding: 10px; background-color: #f7f7f7; } /* 배경색 추가 */
-    
-    #placesList .item {
-        position: relative;
-        background: white;
-        border-radius: 8px; /* 둥근 모서리 */
-        box-shadow: 0 2px 5px rgba(0,0,0,0.08); /* 그림자 효과 */
-        overflow: hidden;
-        cursor: pointer;
-        margin-bottom: 15px; /* 아이템 간 간격 */
-        transition: transform 0.2s, box-shadow 0.2s;
-        border: 1px solid #eee;
-    }
-    
-    #placesList .item:hover {
-        transform: translateY(-3px); /* 마우스 올리면 살짝 뜸 */
-        box-shadow: 0 5px 12px rgba(0,0,0,0.15);
-        border-color: #cce5ff;
-    }
-    
-    /* 이미지 영역 */
-    #placesList .item .img-box {
-        width: 100%;
-        height: 120px;
-        background-color: #eee;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-    }
-    
-    #placesList .item .img-box img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover; /* 비율 유지하며 꽉 채우기 */
-    }
-    
-    #placesList .item .img-box .no-img {
-        font-size: 12px; color: #aaa;
-    }
-
-    /* 텍스트 정보 영역 */
-    #placesList .item .info-box {
-        padding: 10px;
-    }
-
-    #placesList .item .title {
-        font-weight: bold; 
-        font-size: 15px; 
-        color: #333; 
-        display: block; 
-        margin-bottom: 4px;
-    }
-    
-    #placesList .item .addr {
-        font-size: 12px; color: #666; margin-bottom: 2px;
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    
-    #placesList .item .tel {
-        font-size: 12px; color: #007bff; margin-bottom: 8px;
-    }
-    
-    /* 버튼 그룹 (인포윈도우와 동일 스타일) */
-    #placesList .item .btn-group {
-        border-top: 1px solid #f1f1f1;
-        padding-top: 8px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 3px;
-    }
-    
-    #placesList .item .day-add-btn {
-        border: 1px solid #007bff; 
-        background: white; 
-        color: #007bff;
-        padding: 2px 8px; 
-        font-size: 11px; 
-        cursor: pointer; 
-        border-radius: 3px;
-        transition: all 0.2s;
-    }
-    
-    #placesList .item .day-add-btn:hover {
-        background: #007bff; color: white;
-    }
-    
-    /* 인포윈도우 스타일 */
-    .iw_inner { padding: 5px; width: 200px; }
-    .iw_title { font-weight: bold; margin-bottom: 5px; display: block;}
-    .iw_btn_group { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 3px; }
-    .iw_btn_group button {
-        border: 1px solid #007bff; background: white; color: #007bff;
-        padding: 2px 6px; font-size: 11px; cursor: pointer; border-radius: 3px;
-    }
-    .iw_btn_group button:hover { background: #007bff; color: white; }
-    
-    /* 자동완성 박스 스타일 */
-    #suggestion_box {
-        display: none; /* 평소엔 숨김 */
-        position: absolute;
-        top: 45px; /* 검색창 바로 아래 */
-        left: 5px;
-        right: 5px;
-        background: white;
-        border: 1px solid #ccc;
-        border-top: none;
-        z-index: 10;
-        max-height: 200px;
-        overflow-y: auto;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        border-radius: 0 0 5px 5px;
-    }
-    #suggestion_box div {
-        padding: 8px 10px;
-        cursor: pointer;
-        font-size: 12px;
-        border-bottom: 1px solid #eee;
-    }
-    #suggestion_box div:hover {
-        background-color: #f1f1f1;
-    }
-    #suggestion_box strong {
-        color: #007bff;
-    }
-</style>
-</head>
-<body>
+<link rel="stylesheet" href="/CSS/map.css">
 
 <div class="map_wrap">
     <div id="map"></div>
@@ -683,16 +475,21 @@
 	// 인포윈도우 생성
     function getInfoWindowContent(place, details) {
         const totalDays = calculateTotalDays();
-        let btns = '';
         
-        // 버튼 생성
+        // 드롭다운 옵션 생성
+        let dayOptions = '';
         for(let d=1; d<=totalDays; d++){
-            // 인라인 onclick에서 전역 함수 호출
-            btns += `<button class="day-add-btn" onclick="addCurrentPlaceToSchedule(\${d})">Day \${d}</button>`;
+            dayOptions += `<option value="\${d}">Day \${d}</option>`;
         }
         
-   		// 노트 버튼 추가
-        btns += `<button class="note-add-btn" onclick="addCurrentPlaceToNote()">Note</button>`;
+        // 인포윈도우는 HTML 문자열로 넘기므로 id를 부여하거나 인라인 함수에서 값을 찾아야 함..
+        const controlHtml = `
+            <select class="day-select" id="iw_day_select_\${place.id}" style="width: auto;">
+                \${dayOptions}
+            </select>
+            <button class="day-add-confirm-btn" onclick="addPlaceFromInfoWindow('\${place.id}')">추가</button>
+            <button class="note-add-btn" onclick="addCurrentPlaceToNote()">Note</button>
+        `;
         
         // 이미지 로드
         const imgHtml = place.image_url ? 
@@ -719,35 +516,35 @@
         }
         
         return `
-            <div class="iw_inner">
-        		\${imgHtml}
-        		<div style="margin-top:5px;">
-	                <span class="iw_title" style="font-size:15px;">\${place.place_name}</span>
-	                <span style="font-size:12px; color:#007bff; display:block;">\${place.phone || ''}</span>
-	            </div>
-	            \${detailHtml}
-                <div class="iw_btn_group">
-                    \${btns}
-                </div>
-            </div>`;
+	        <div class="iw_inner" style="width:220px;">
+		        \${imgHtml}
+		        <div style="margin-top:5px;">
+		            <span class="iw_title" style="font-size:15px;">\${place.place_name}</span>
+		            <span style="font-size:12px; color:#007bff; display:block;">\${place.phone || ''}</span>
+		        </div>
+		        \${detailHtml}
+		        <div class="iw_btn_group">
+		            \${controlHtml}
+		        </div>
+		    </div>`;
     }
 	
-	// 인포윈도우 내 버튼 클릭 시 실행되는 함수
-    window.addCurrentPlaceToSchedule = function(day) {
-        if(currentPlace) {
-            // schedule.jsp에 있는 addRoute 함수 호출
-            // 주의: addRoute가 전역 범위에 있어야 함
+ 	// 인포윈도우에서 '추가' 버튼 눌렀을 때 실행될 함수
+    window.addPlaceFromInfoWindow = function(placeId) {
+        // 해당 장소의 select 박스를 찾음
+        const selectEl = document.getElementById(`iw_day_select_\${placeId}`);
+        if(selectEl && currentPlace) {
+            const day = selectEl.value;
+            
             if(window.parent && window.parent.addRoute) {
                  window.parent.addRoute(day, currentPlace);
             } else if (window.addRoute) {
                  window.addRoute(day, currentPlace);
             }
             alert(day + "일차에 추가되었습니다.");
-            // 인포윈도우 닫기 (선택사항)
-            // infowindow.close(); 
         }
     };
-    
+	    
  	// 인포윈도우 내 노트 버튼 클릭 시 실행되는 함수
     window.addCurrentPlaceToNote = function() {
         if(currentPlace) {
@@ -786,14 +583,20 @@
         var el = document.createElement('li');
         el.className = 'item';
         
-        // 버튼을 생성할 태그를 함수에 저장
-        let buttonsHtml = '';
+        // 드롭다운 옵션 생성
+        let dayOptions = '';
         for (let d = 1; d <= totalDays; d++) {
-            // JSON 데이터를 안전하게 넘기기 위해 임시 변수에 저장하거나 파라미터로 직접 전달
-            buttonsHtml += `<button type="button" class="day-add-btn" data-day="\${d}">Day \${d}</button> `;
+            dayOptions += `<option value="\${d}">Day \${d}</option>`;
         }
-        // 노트에 추가 버튼
-        buttonsHtml += `<button type="button" class="note-add-btn">Note</button>`;
+        
+     	// 드롭다운 + 추가 버튼 조합
+        // onclick="event.stopPropagation()" : 드롭다운 클릭 시 지도 이동 방지
+        const selectHtml = `
+            <select class="day-select" onclick="event.stopPropagation()">
+                \${dayOptions}
+            </select>
+            <button type="button" class="day-add-confirm-btn">추가</button>
+        `;
         
   	   	// 이미지 HTML 처리 -> 이미지가 있으면 img 태그, 없으면 '이미지 없음' 텍스트
         let imgHtml = '';
@@ -805,26 +608,34 @@
         
    		// HTML 조립
         el.innerHTML = `
-            <div class="img-box">
-                \${imgHtml}
-            </div>
+            <div class="img-box">\${imgHtml}</div>
             <div class="info-box">
                 <span class="title">\${index + 1}. \${place.place_name}</span>
                 <div class="addr">\${place.road_address_name || place.address_name}</div>
                 <div class="tel">\${place.phone || ''}</div>
-                <div class="btn-group">\${buttonsHtml}</div>
+                <div class="btn-group">
+                    \${selectHtml}
+                    <button type="button" class="note-add-btn">Note</button>
+                </div>
             </div>
         `;
 
         // 리스트 내 버튼 이벤트
-		const btns = el.querySelectorAll('.day-add-btn');
-		btns.forEach(btn => {
-		    btn.onclick = function(e) {
-		        e.stopPropagation(); // li의 클릭 이벤트(지도 이동) 방지
-		        const day = this.getAttribute('data-day');
-		        if(window.addRoute) window.addRoute(day, place); // schedule.jsp의 함수 호출
-		    };
-		});
+		const addBtn = el.querySelector('.day-add-confirm-btn');
+        if(addBtn) {
+            addBtn.onclick = function(e) {
+                e.stopPropagation(); // 부모 클릭 방지
+                
+                // 형제 요소인 select 박스를 찾아서 값을 가져옴
+                const selectBox = this.parentElement.querySelector('.day-select');
+                const selectedDay = selectBox.value;
+                
+                if(window.addRoute) {
+                    window.addRoute(selectedDay, place);
+                    alert(`Day \${selectedDay}에 추가되었습니다.`);
+                }
+            };
+        }
 		
 		// 노트 버튼 이벤트
 	    const noteBtn = el.querySelector('.note-add-btn');
@@ -905,5 +716,3 @@
     };
 
 </script>
-</body>
-</html>

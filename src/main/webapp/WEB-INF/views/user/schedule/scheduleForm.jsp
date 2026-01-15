@@ -8,26 +8,48 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
 <meta charset="UTF-8">
-<title>Insert title here</title>
+<title>머무름 - 여정 시작</title>
+<style>
+	/* 대시보드(user/mypage/main.jsp)의 컬러 정보 참조 */
+	:root {
+        --primary-color: #a29bfe;
+        --primary-hover: #6c5ce7;
+        --bg-color: #f8f9ff;
+        --text-color: #2d3436;
+        --border-color: #f1f3ff;
+        --shadow-soft: 0 10px 30px rgba(162, 155, 254, 0.05);
+    }
+
+	body {
+        font-family: 'Pretendard', sans-serif;
+        margin: 0;
+        padding: 0;
+        color: var(--text-color);
+        background-color: var(--bg-color);
+        overflow: hidden; /* 전체 스크롤 방지 */
+    }
+</style>
 </head>
 <body>
 	<div>
-		<h3>여행 계획하기</h3>
-	</div>
-	<div>
-		<form name="scheduleForm" id="scheduleForm" method="post" action="/user/schedule/schedule">
-			<div>
-				<input type="text" name="p_name" id="p_name" placeholder="여행지를 적어주세요. 예)서울 부산"><br>
-			</div>
-			<div>
-				<input type="text" id="dateSchedule" placeholder="여행 기간을 선택하세요">
-				<input type="hidden" name="s_start" id="s_start">
-				<input type="hidden" name="s_end" id="s_end">
-			</div>
-			<div>
-				<input type="submit" value="계획 시작">
-			</div>
-		</form>
+		<div>
+			<h3>여행 계획하기</h3>
+		</div>
+		<div>
+			<form name="scheduleForm" id="scheduleForm" method="post" action="/user/schedule/schedule">
+				<div>
+					<input type="text" name="p_name" id="p_name" placeholder="여행지를 적어주세요. 예)서울 부산"><br>
+				</div>
+				<div>
+					<input type="text" id="dateSchedule" placeholder="여행 기간을 선택하세요">
+					<input type="hidden" name="s_start" id="s_start">
+					<input type="hidden" name="s_end" id="s_end">
+				</div>
+				<div>
+					<input type="submit" value="계획 시작">
+				</div>
+			</form>
+		</div>
 	</div>
 	<!-- 달력 출력 -->
 	<script>
