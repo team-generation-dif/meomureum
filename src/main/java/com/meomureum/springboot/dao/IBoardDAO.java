@@ -17,4 +17,5 @@ public interface IBoardDAO {
 	public int updateDao(BoardDTO dto);  // 수정
 	public BoardDTO boardTitle(String b_title); // 제목 조회
 	public int increaseViewCount(String b_code); // 조회수 증가
+	void deleteBoard(String b_code);
 }

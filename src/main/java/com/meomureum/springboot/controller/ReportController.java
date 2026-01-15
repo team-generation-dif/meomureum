@@ -26,37 +26,59 @@ public class ReportController {
     @Autowired
     private IReplyDAO replyDAO;
 
-    // 관리자: 신고 목록
-    @GetMapping("/admin/report/listReports")
-    public String listReports(Model model) {
-        List<ReportDTO> reports = reportDAO.listReports();
-        model.addAttribute("reports", reports);
+    // 📍 관리자: 신고 목록 조회
+    @GetMapping("/admin/board/listreports")
+    public String listReports(@RequestParam(name = "page", defaultValue = "1") int page,
+            				  @RequestParam(name = "size", defaultValue = "10") int size,
+            			      Model model) {
+    	int startRow = (page - 1) * size + 1;
+        int endRow = page * size;
+
+        model.addAttribute("pendingReports", reportDAO.listPendingReports(startRow, endRow));
+        model.addAttribute("doneReports", reportDAO.listDoneReports(startRow, endRow));
+        model.addAttribute("ignoredReports", reportDAO.listIgnoredReports(startRow, endRow));
+        // doneReports, ignoredReports도 동일하게 처리
+
+        model.addAttribute("currentPage", page);
+        model.addAttribute("pageSize", size);
+        model.addAttribute("totalPages", 10); // 실제 전체 페이지 수 계산해서 넣어야 함
+
         return "admin/board/listReports";
+
     }
 
-    // 관리자: 신고 처리
-    @PostMapping("/admin/report/process")
+    // 신고 처리 (예: 삭제)
+    @PostMapping("/admin/board/listreports/process")
     public String processReport(@RequestParam("rep_code") String rep_code,
-                                @RequestParam("target_code") String target_code,
-                                @RequestParam(value="rep_category", required=false, defaultValue="BOARD") String rep_category,
                                 @RequestParam("action") String action) {
+        ReportDTO dto = new ReportDTO();
+        dto.setRep_code(rep_code);
+        
+        ReportDTO report = reportDAO.findReportByCode(rep_code);
+
         if ("DELETE".equals(action)) {
-            if ("BOARD".equalsIgnoreCase(rep_category) || "게시글".equals(rep_category)) {
-                boardDAO.deleteDao(target_code);
-            } else if ("REPLY".equalsIgnoreCase(rep_category) || "댓글".equals(rep_category)) {
-                replyDAO.deleteReply(target_code);
+            // 신고 수용 → 실제 콘텐츠 삭제 + 상태 DONE
+            dto.setRep_status("DONE");
+            // 카테고리에 따라 실제 삭제 처리
+            if ("BOARD".equals(report.getRep_category())) {
+                boardDAO.deleteBoard(report.getTarget_code());
+            } else if ("REPLY".equals(report.getRep_category())) {
+                replyDAO.deleteReply(report.getTarget_code());
             }
+            reportDAO.updateReportStatus(dto);
+
+        } else if ("IGNORE".equals(action)) {
+            // 신고 무시 → 콘텐츠 유지 + 상태 IGNORE
+            dto.setRep_status("IGNORE");
+            reportDAO.updateReportStatus(dto);
         }
-        reportDAO.deleteReport(rep_code);
-        return "redirect:/admin/report/listReports";
+
+        return "redirect:/admin/board/listreports";
     }
 
-    // 유저: 신고 제출 처리 (에러 발생 지점)
-    // 반드시 앞에 /가 붙어야 하며, JSP의 action과 일치해야 함
+
     @PostMapping("/report/submit")
     public String submitReport(@ModelAttribute ReportDTO dto, Authentication authentication) {
-        if (authentication == null) return "redirect:/guest/loginForm";
-
         String m_id = authentication.getName();
         MemberDTO member = memberDAO.selectDAOById(m_id);
         dto.setM_code(member.getM_code());

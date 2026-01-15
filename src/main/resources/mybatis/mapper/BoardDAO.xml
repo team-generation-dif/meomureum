@@ -51,7 +51,11 @@
     <delete id="deleteDao" parameterType="String">
         DELETE FROM board WHERE b_code = #{b_code}
     </delete>
-
+    
+    <delete id="deleteBoard" parameterType="String">
+    	DELETE FROM board WHERE b_code = #{b_code}
+	</delete>
+        
     <!-- 게시글 수정 -->
     <update id="updateDao" parameterType="com.meomureum.springboot.dto.BoardDTO">
         UPDATE board

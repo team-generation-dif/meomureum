@@ -13,6 +13,6 @@ public class ReportDTO {
 	    private String rep_content;
 	    private Date created_at;
 	    private String target_code;    // 게시글/댓글 코드 (추가)
-	    private String rep_status; 
+	    private String rep_status;     // 처리 상태 (PENDING / DONE / IGNORE)
 	    
 }

@@ -7,29 +7,87 @@
 	<!-- 신고 등록 -->
     <insert id="insertReport" parameterType="com.meomureum.springboot.dto.ReportDTO">
         INSERT INTO report (
-            rep_code, rep_category, m_code, rep_title, rep_content, target_code, created_at
+            rep_code, rep_category, m_code, rep_title, rep_content, target_code, rep_status, created_at
         ) VALUES (
             'REP' || LPAD(report_seq.NEXTVAL, 4, '0'),
             #{rep_category},
             #{m_code},
             #{rep_title},
             #{rep_content},
-            #{target_code},            
+            #{target_code},
+            'PENDING',        
             SYSDATE
         )
     </insert>
     
 	<!-- 신고 목록 조회 -->
     <select id="listReports" resultType="com.meomureum.springboot.dto.ReportDTO">
-        SELECT rep_code, rep_category, m_code, rep_title, rep_content, created_at, target_code
+        SELECT rep_code, rep_category, m_code, rep_title, rep_content, target_code, created_at, rep_status
         FROM report
-        ORDER BY created_at DESC
+        ORDER BY 
+        CASE rep_status
+            WHEN 'PENDING' THEN 1
+            WHEN 'DONE' THEN 2
+            WHEN 'IGNORE' THEN 3
+        END,
+        created_at DESC
     </select>
-        
-    <!-- 신고 삭제 (처리 후 목록에서 제거) -->
-    <delete id="deleteReport" parameterType="String">
-        DELETE FROM report WHERE rep_code = #{rep_code}
-    </delete>
+    
+    <!-- 대기중 신고 -->
+    <select id="listPendingReports" resultType="com.meomureum.springboot.dto.ReportDTO">
+        SELECT * FROM (
+            SELECT inner.*, ROWNUM AS rnum
+            FROM (
+                SELECT * FROM report 
+                WHERE rep_status = 'PENDING'
+                ORDER BY created_at DESC
+            ) inner
+            WHERE ROWNUM &lt;= #{endRow}
+        )
+        WHERE rnum &gt;= #{startRow}
+    </select>
+
+    <!-- 처리 완료 신고 -->
+    <select id="listDoneReports" resultType="com.meomureum.springboot.dto.ReportDTO">
+        SELECT * FROM (
+            SELECT inner.*, ROWNUM AS rnum
+            FROM (
+                SELECT * FROM report 
+                WHERE rep_status = 'DONE'
+                ORDER BY created_at DESC
+            ) inner
+            WHERE ROWNUM &lt;= #{endRow}
+        )
+        WHERE rnum &gt;= #{startRow}
+    </select>
+
+    <!-- 무시된 신고 -->
+    <select id="listIgnoredReports" resultType="com.meomureum.springboot.dto.ReportDTO">
+        SELECT * FROM (
+            SELECT inner.*, ROWNUM AS rnum
+            FROM (
+                SELECT * FROM report 
+                WHERE rep_status = 'IGNORE'
+                ORDER BY created_at DESC
+            ) inner
+            WHERE ROWNUM &lt;= #{endRow}
+        )
+        WHERE rnum &gt;= #{startRow}
+    </select>
+    
+    <!-- 신고 단건 조회 -->    
+     <select id="findReportByCode" parameterType="String" resultType="com.meomureum.springboot.dto.ReportDTO">
+    	SELECT rep_code, rep_category, m_code, rep_title, rep_content, target_code, created_at, rep_status
+    	FROM report
+   		WHERE rep_code = #{rep_code}
+	</select>
+               
+    <!-- 신고 상태 업데이트 -->
+    <update id="updateReportStatus" parameterType="com.meomureum.springboot.dto.ReportDTO">
+        UPDATE report
+        SET rep_status = #{rep_status}
+        WHERE rep_code = #{rep_code}
+    </update>            
         
 </mapper>
 
