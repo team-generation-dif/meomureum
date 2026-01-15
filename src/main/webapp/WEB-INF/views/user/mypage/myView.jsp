@@ -101,7 +101,7 @@
             
             <div class="btn-group">
                 <a href="/user/mypage/confirmPwForm?mode=update" class="btn btn-edit">회원 정보 수정</a>
-                <a href="/user/mypage/main" class="btn btn-main">마이페이지 메인</a>
+                <a href="/user/mypage/main" class="btn btn-main">메인으로 이동</a>
             </div>
 
             <div style="text-align: center;">
