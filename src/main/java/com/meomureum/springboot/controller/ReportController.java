@@ -1,15 +1,11 @@
 package com.meomureum.springboot.controller;
 
 import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import com.meomureum.springboot.dao.IBoardDAO;
 import com.meomureum.springboot.dao.IMemberDAO;
@@ -23,13 +19,10 @@ public class ReportController {
 
     @Autowired
     private IReportDAO reportDAO;
-
     @Autowired
     private IMemberDAO memberDAO;
-    
     @Autowired
     private IBoardDAO boardDAO;
-
     @Autowired
     private IReplyDAO replyDAO;
 
@@ -89,23 +82,18 @@ public class ReportController {
         String m_id = authentication.getName();
         MemberDTO member = memberDAO.selectDAOById(m_id);
         dto.setM_code(member.getM_code());
-        
-        // 게시글 신고면 게시글 코드, 댓글 신고면 댓글 코드가 target_code에 들어가야 함
-        // 이미 JSP에서 hidden input으로 target_code를 넘기고 있다면 그대로 dto에 매핑됨
-        // 만약 없다면 여기서 직접 세팅 필요
-                               
+                                   
         reportDAO.insertReport(dto);
         
         String redirectUrl;
-        if ("BOARD".equals(dto.getRep_category())) {
-            // 게시글 신고 → 그대로 게시글 상세로
+        // 카테고리에 맞춰 리다이렉트 경로 설정
+        if ("BOARD".equalsIgnoreCase(dto.getRep_category())) {
             redirectUrl = "/user/board/detail/" + dto.getTarget_code();
-        } else if ("REPLY".equals(dto.getRep_category())) {
-            // 댓글 신고 → 댓글의 부모 게시글 코드 찾아서 이동
+        } else if ("REPLY".equalsIgnoreCase(dto.getRep_category())) {
             String b_code = replyDAO.findBoardCodeByReply(dto.getTarget_code());
             redirectUrl = "/user/board/detail/" + b_code;
         } else {
-            redirectUrl = "/user/board/list"; // fallback
+            redirectUrl = "/user/board/list";
         }
 
         return "redirect:" + redirectUrl;

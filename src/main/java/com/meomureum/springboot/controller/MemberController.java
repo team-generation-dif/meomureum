@@ -17,17 +17,20 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.meomureum.springboot.dao.IBoardDAO;
 import com.meomureum.springboot.dao.IMemberDAO;
+import com.meomureum.springboot.dao.IReportDAO;
 import com.meomureum.springboot.dao.IScheduleDAO;
 import com.meomureum.springboot.dto.BoardDTO;
 import com.meomureum.springboot.dto.MemberDTO;
+import com.meomureum.springboot.dto.ReportDTO;
 import com.meomureum.springboot.dto.ScheduleDTO;
 
 @Controller
 public class MemberController {
 
-    @Autowired private IMemberDAO memberDAO;
+	@Autowired private IMemberDAO memberDAO;
     @Autowired private IScheduleDAO scheduleDAO;
     @Autowired private IBoardDAO boardDAO;
+    @Autowired private IReportDAO reportDAO; // 1. 신고 DAO 주입 필수!
     @Autowired private PasswordEncoder passwordEncoder;
     
     // 0. 로그인 성공 후 분기 처리
@@ -172,28 +175,109 @@ public class MemberController {
  // ==========================================
 
  // [1] 관리자 메인 대시보드 페이지
- @RequestMapping("/admin/member/main") 
- public String adminMain(Model model) {
-     // 요약 정보를 위해 전체 회원 수 등을 모델에 담습니다.
-     model.addAttribute("memberCount", memberDAO.listDao().size());
-     
-     // 아까 만든 대시보드 JSP (adminMain.jsp)
-     return "admin/member/main"; 
- }
+    @RequestMapping("/admin/member/main") 
+    public String adminMain(Model model) {
+        // 1. 오늘 날짜 구하기 (yyyy-MM-dd)
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
+        String todayStr = sdf.format(new java.util.Date());
 
- // [2] 전체 회원 리스트 페이지
+        // --- [1] 전체 회원 및 오늘 신규 가입자 ---
+        List<MemberDTO> members = memberDAO.listDao();
+        long todayNewMembers = 0;
+        if (members != null) {
+            todayNewMembers = members.stream()
+                .filter(m -> {
+                    if (m.getCreated_at() == null) return false;
+                    // 날짜 객체든 문자열이든 yyyy-MM-dd 부분만 비교
+                    return String.valueOf(m.getCreated_at()).startsWith(todayStr);
+                }).count();
+        }
+
+        // --- [2] 오늘 새로운 게시글 수 (수정됨) ---
+        List<BoardDTO> boards = boardDAO.listDao(); 
+        long todayNewBoards = 0;
+        if (boards != null) {
+            todayNewBoards = boards.stream()
+                .filter(b -> {
+                    // b.getCreated_at()이 날짜 타입인 경우 toString() 하면 "2024-05-20 ..." 형식이 됨
+                    Object boardDate = b.getCreated_at(); 
+                    return boardDate != null && String.valueOf(boardDate).startsWith(todayStr);
+                }).count();
+        }
+
+        // --- [3] 미처리 신고 건수 (rep_status가 'PENDING' 혹은 null/빈값인 경우) ---
+        List<ReportDTO> reports = reportDAO.listReports();
+        long pendingReportCount = 0;
+        if (reports != null) {
+            pendingReportCount = reports.stream()
+                .filter(r -> {
+                    String status = r.getRep_status();
+                    // 상태가 없거나(null), PENDING인 경우 모두 미처리로 간주
+                    return status == null || "PENDING".equalsIgnoreCase(status.trim()) || status.isEmpty();
+                }).count();
+        }
+
+        // 4. 모델에 데이터 전달
+        model.addAttribute("memberCount", (members != null) ? members.size() : 0);
+        model.addAttribute("newCount", todayNewMembers);       
+        model.addAttribute("newBoardCount", todayNewBoards);   
+        model.addAttribute("reportCount", pendingReportCount); 
+
+        // 디버깅: 데이터가 안 나올 경우 이클립스 Console 창을 확인하세요.
+        System.out.println("====== 대시보드 검증 ======");
+        System.out.println("기준 날짜: " + todayStr);
+        System.out.println("전체 게시글 수: " + (boards != null ? boards.size() : "null"));
+        System.out.println("오늘 신규 게시글: " + todayNewBoards);
+        System.out.println("전체 신고 건수: " + (reports != null ? reports.size() : "null"));
+        System.out.println("미처리 신고 건수: " + pendingReportCount);
+
+        return "admin/member/main"; 
+    }
+//[2] 전체 회원 리스트 페이지
  @RequestMapping("/admin/member/memberList") 
  public String memberList(
          @RequestParam(value="keyword", required=false) String keyword, 
          Model model) {
      
+     List<MemberDTO> allMembers;
      if (keyword != null && !keyword.isEmpty()) {
-         model.addAttribute("members", memberDAO.searchMembers(keyword));
-         model.addAttribute("keyword", keyword);
+         allMembers = memberDAO.searchMembers(keyword);
      } else {
-         model.addAttribute("members", memberDAO.listDao());
+         allMembers = memberDAO.listDao();
      }
-     // 리스트 전용 JSP (memberList.jsp)
+
+     // --- [날짜 비교 로직 시작] ---
+     java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
+     String todayStr = sdf.format(new java.util.Date());
+
+     long newMemberCount = 0;
+     
+     if (allMembers != null) {
+         newMemberCount = allMembers.stream()
+             .filter(m -> {
+                 Object createdAt = m.getCreated_at(); // 데이터를 Object로 받음
+                 if (createdAt == null) return false;
+                 
+                 String memberJoinDate = "";
+                 if (createdAt instanceof java.util.Date) {
+                     memberJoinDate = sdf.format(createdAt);
+                 } else {
+                     // String 타입일 경우 앞의 10자(yyyy-MM-dd)만 추출
+                     memberJoinDate = createdAt.toString().substring(0, 10);
+                 }
+                 return todayStr.equals(memberJoinDate);
+             })
+             .count();
+     }
+     
+     // 콘솔창에서 확인용 (숫자가 나오는지 꼭 확인해보세요!)
+     System.out.println("오늘 날짜: " + todayStr);
+     System.out.println("오늘 가입자 수: " + newMemberCount);
+
+     model.addAttribute("newCount", newMemberCount); // JSP에서 ${newCount}와 일치해야 함
+     model.addAttribute("members", allMembers);
+     model.addAttribute("keyword", keyword);
+     
      return "admin/member/memberList"; 
  }
 
@@ -221,4 +305,17 @@ public String view(@PathVariable("m_code") String m_code, Model model) {
      memberDAO.deleteDao(m_code);
      return "redirect:/admin/member/memberList";
  }
+//[6] 신고 리스트 페이지 (추가)
+@RequestMapping("/admin/board/listReports")
+public String listReports(Model model) {
+  // 1. 모든 신고 데이터 가져오기 (IReportDAO 사용)
+  List<ReportDTO> reportList = reportDAO.listReports(); // 메서드명은 DAO에 맞게 확인 필요
+  
+  // 2. 모델에 담기
+  model.addAttribute("reports", reportList);
+  
+  // 3. JSP 페이지로 이동
+  // 실제 해당 JSP 파일이 /WEB-INF/views/admin/board/listReports.jsp 경로에 있어야 합니다.
+  return "admin/board/listReports"; 
+}
 }

@@ -62,7 +62,24 @@
         font-size: 12px; cursor: pointer;
     }
     .cat_btn:hover, .cat_btn.active { background: #007bff; color: white; border-color: #007bff; }
-
+	
+	.note-add-btn {
+	    border: 1px solid #28a745; /* 녹색 테두리 */
+	    background: white; 
+	    color: #28a745; /* 녹색 글자 */
+	    padding: 2px 8px; 
+	    font-size: 11px; 
+	    cursor: pointer; 
+	    border-radius: 3px;
+	    transition: all 0.2s;
+	    font-weight: bold;
+	}
+	
+	.note-add-btn:hover {
+	    background: #28a745; 
+	    color: white;
+	}
+	
     /* 3. 목록 아이템 스타일 (카드형 디자인 적용) */
     #placesList { padding: 10px; background-color: #f7f7f7; } /* 배경색 추가 */
     
@@ -673,6 +690,10 @@
             // 인라인 onclick에서 전역 함수 호출
             btns += `<button class="day-add-btn" onclick="addCurrentPlaceToSchedule(\${d})">Day \${d}</button>`;
         }
+        
+   		// 노트 버튼 추가
+        btns += `<button class="note-add-btn" onclick="addCurrentPlaceToNote()">Note</button>`;
+        
         // 이미지 로드
         const imgHtml = place.image_url ? 
             `<img src="\${place.image_url}" style="width:100%; height:100px; object-fit:cover; margin-bottom:5px;">` : '';
@@ -727,6 +748,18 @@
         }
     };
     
+ 	// 인포윈도우 내 노트 버튼 클릭 시 실행되는 함수
+    window.addCurrentPlaceToNote = function() {
+        if(currentPlace) {
+            if(window.addNoteWithPlace) {
+                window.addNoteWithPlace(currentPlace);
+            } else if(window.parent && window.parent.addNoteWithPlace) {
+                window.parent.addNoteWithPlace(currentPlace);
+            }
+            alert("새 노트에 추가되었습니다.");
+        }
+    };
+    
     // 마커 생성 및 삭제
     function addMarker(position) {
         var marker = new kakao.maps.Marker({
@@ -759,6 +792,9 @@
             // JSON 데이터를 안전하게 넘기기 위해 임시 변수에 저장하거나 파라미터로 직접 전달
             buttonsHtml += `<button type="button" class="day-add-btn" data-day="\${d}">Day \${d}</button> `;
         }
+        // 노트에 추가 버튼
+        buttonsHtml += `<button type="button" class="note-add-btn">Note</button>`;
+        
   	   	// 이미지 HTML 처리 -> 이미지가 있으면 img 태그, 없으면 '이미지 없음' 텍스트
         let imgHtml = '';
         if(place.image_url) {
@@ -789,6 +825,21 @@
 		        if(window.addRoute) window.addRoute(day, place); // schedule.jsp의 함수 호출
 		    };
 		});
+		
+		// 노트 버튼 이벤트
+	    const noteBtn = el.querySelector('.note-add-btn');
+	    if(noteBtn) {
+	        noteBtn.onclick = function(e) {
+	            e.stopPropagation();
+	            // 부모창(schedule.jsp)에 있는 addNoteWithPlace 함수 호출
+	            if(window.addNoteWithPlace) {
+	                window.addNoteWithPlace(place);
+	            } else if(window.parent && window.parent.addNoteWithPlace) {
+	                window.parent.addNoteWithPlace(place);
+	            }
+	        };
+	    }
+		
         return el;
     }
     

@@ -6,11 +6,11 @@
 	
 <mapper namespace="com.meomureum.springboot.dao.IScheduleDAO">
 	<select id="listDAOByMCode" resultType="com.meomureum.springboot.dto.ScheduleDTO">
-		select * from schedule where m_code = #{m_code}
+		select * from schedule where m_code = #{m_code}	and s_end >= trunc(sysdate)
 	</select>
-	<select id="listDAOByMCode2" resultType="com.meomureum.springboot.dto.ScheduleDTO">
-		select * from schedule where m_code = #{m_code} and s_end >= sysdate
-	</select>
+<!-- 	<select id="listDAOByMCode2" resultType="com.meomureum.springboot.dto.ScheduleDTO">
+		select * from schedule where m_code = #{m_code} 
+	</select> -->
 	<select id="selectDAO" resultType="com.meomureum.springboot.dto.ScheduleDTO">
 		select * from schedule where s_code = #{s_code}
 	</select>

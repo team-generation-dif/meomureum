@@ -3,7 +3,13 @@
 
 <mapper namespace="com.meomureum.springboot.dao.INoteDAO">
 	<select id="listDAOBySCode" resultType="com.meomureum.springboot.dto.NoteDTO">
-		select * from note where s_code = #{s_code} order by n_order asc
+		select n.n_code, n.s_code, p.p_code, n.n_title, n.n_content, n.created_at,
+         	   n.n_order, p.api_code, p.p_place as p_name, p.p_addr, p.p_tel, f.file_path
+ 		 from note n left join place p on (n.p_code = p.p_code) 
+		 join fileupload f on (p.p_code = f.target_code)
+		 and f.target_type = 'PLACE' and f.file_order = 1
+		 where s_code = #{s_code} 
+		 order by n_order asc
 	</select>
 	<insert id="insertDAO">
 		insert into note
