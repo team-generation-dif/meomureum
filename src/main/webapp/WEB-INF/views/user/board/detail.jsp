@@ -46,6 +46,7 @@
                 <h2 style="margin-top:10px; font-weight:bold;">${board.b_title}</h2>
             </div>
             <div style="text-align:right; color:#999; font-size:13px;">
+            	작성자: ${board.m_nick}
                 작성일: <fmt:formatDate value="${board.created_at}" pattern="yyyy-MM-dd"/> | 
                 조회수: ${board.b_view}
             </div>

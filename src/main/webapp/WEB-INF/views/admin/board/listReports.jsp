@@ -9,11 +9,34 @@
 <style>
     body { background-color: #f8f9ff; margin: 0; font-family: 'Malgun Gothic', sans-serif; color: #333; }
     .admin-wrapper { padding: 40px; max-width: 1200px; margin: 0 auto; }
-
+	
+	/* 상단 헤더 */	
     .admin-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 40px; }
     .welcome-text h1 { margin: 0; font-size: 26px; color: #2d3436; }
     .welcome-text p { margin: 5px 0 0; color: #a29bfe; font-weight: bold; }
-
+	
+	/* 홈 버튼 스타일 */
+    .btn-home-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 18px;
+        background: white;
+        border: 1px solid #f1f3ff;
+        border-radius: 15px;
+        text-decoration: none;
+        font-weight: bold;
+        color: #666;
+        font-size: 15px;
+        box-shadow: 0 5px 15px rgba(162,155,254,0.1);
+        transition: 0.3s;
+    }
+    .btn-home-back:hover {
+        background: #a29bfe;
+        color: white;
+        box-shadow: 0 5px 15px rgba(162,155,254,0.3);
+    }	
+			
     /* 탭 스타일 */
     .nav-tabs { border-bottom: 2px solid #e1e5ff; margin-bottom: 20px; }
     .nav-tabs li { display: inline-block; margin-right: 10px; }
@@ -62,7 +85,10 @@
             <h1>🚨 신고 관리</h1>
             <p>회원들이 접수한 신고를 확인하고 처리합니다.</p>
         </div>
-        <a href="/admin/member/main" class="home-btn">⬅ 관리자 홈으로</a>
+         <!-- ✅ 통일된 홈 버튼 -->
+        <a href="/admin/member/main" class="btn-home-back">
+            <span style="font-size: 18px;">🏠</span> 관리자 메인
+        </a>
     </header>
 
 <!-- 상태별 탭 -->

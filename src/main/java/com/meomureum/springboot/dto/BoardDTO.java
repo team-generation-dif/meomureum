@@ -15,4 +15,5 @@ public class BoardDTO {
 	private String m_code;	
 	public String getM_code() { return m_code; }
 	public void setM_code(String m_code) { this.m_code = m_code; }
+	private String m_nick;   // 작성자 닉네임 추가
 }

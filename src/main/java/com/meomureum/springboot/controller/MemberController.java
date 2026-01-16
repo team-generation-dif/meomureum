@@ -168,7 +168,8 @@ public class MemberController {
     // ==========================================
     // 3. 관리자 영역 (Admin)
     // ==========================================
-
+    
+    // 1. 관리자 센터 메인
     @RequestMapping("/admin/member/main") 
     public String adminMain(Model model) {
         try {
@@ -217,23 +218,48 @@ public class MemberController {
       model.addAttribute("member", memberDAO.viewDao(m_code));
       return "admin/member/memberView";
     }
-
+    
+    // 5. 회원 삭제
     @PostMapping("/admin/delete")
     public String adminDelete(@RequestParam("m_code") String m_code) {
         memberDAO.deleteDao(m_code);
         return "redirect:/admin/member/memberList";
     }
-
+    // 6. 신고 목록 (상태별 조회 + 변수명 통일)
     @RequestMapping("/admin/board/listReports")
-    public String listReports(@RequestParam(name="page", defaultValue="1") int page,
+    public String listReports(@RequestParam(name="status", defaultValue="PENDING") String status,
+                              @RequestParam(name="page", defaultValue="1") int page,
                               @RequestParam(name="size", defaultValue="10") int size,
                               @RequestParam(name="keyword", required=false) String keyword,
                               Model model) {
-      int startRow = (page - 1) * size + 1;
-      int endRow = page * size;
-      model.addAttribute("pendingReports", reportDAO.listPendingReports(startRow, endRow, keyword));
-      model.addAttribute("totalPages", (int) Math.ceil((double) reportDAO.countPendingReports(keyword) / size));
-      model.addAttribute("currentPage", page);
-      return "admin/board/listReports";
+        int startRow = (page - 1) * size + 1;
+        int endRow = page * size;
+
+        List<ReportDTO> reports;
+        int totalReports;
+
+        if ("DONE".equalsIgnoreCase(status)) {
+            reports = reportDAO.listDoneReports(startRow, endRow, keyword);
+            totalReports = reportDAO.countDoneReports(keyword);
+        } else if ("IGNORE".equalsIgnoreCase(status)) {
+            reports = reportDAO.listIgnoredReports(startRow, endRow, keyword);
+            totalReports = reportDAO.countIgnoredReports(keyword);
+        } else {
+            reports = reportDAO.listPendingReports(startRow, endRow, keyword);
+            totalReports = reportDAO.countPendingReports(keyword);
+            status = "PENDING";
+        }
+
+        int totalPages = (int) Math.ceil((double) totalReports / size);
+
+        // ✅ 변수명 통일: JSP에서 reports로 사용
+        model.addAttribute("reports", reports);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("pageSize", size);
+        model.addAttribute("totalPages", totalPages);
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("status", status);
+
+        return "admin/board/listReports";
     }
 }

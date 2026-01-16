@@ -39,8 +39,13 @@
 
     <!-- 게시글 상세 조회 -->
     <select id="selectDao" parameterType="String" resultType="com.meomureum.springboot.dto.BoardDTO">
-        SELECT * FROM board WHERE b_code = #{b_code}
-    </select>
+    	SELECT b.b_code, b.b_title, b.b_content, b.b_view, b.b_category, b.created_at,
+           	b.m_code, m.m_nick
+    	FROM board b
+    	JOIN member m ON b.m_code = m.m_code
+    	WHERE b.b_code = #{b_code}
+	</select>
+
 
     <!-- 게시글 등록 -->
     <insert id="insertDao" parameterType="com.meomureum.springboot.dto.BoardDTO">
