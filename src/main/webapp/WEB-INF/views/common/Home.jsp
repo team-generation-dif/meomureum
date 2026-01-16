@@ -73,30 +73,29 @@
         </div>
         <div class="spot-grid">
             <%-- 추천 장소 (현재 고정값, 나중에 DB 연동 시 동일하게 c:forEach 사용 가능) --%>
-            <div class="spot-card">
-                <div class="spot-img" style="background-image: url('https://images.unsplash.com/photo-1540959733332-e94e270b4d4a?q=80&w=400');"></div>
-                <div class="spot-info">
-                    <span class="spot-tag">바다여행</span>
-                    <h3>부산 광안리</h3>
-                    <p>밤바다와 화려한 드론쇼가 펼쳐지는 곳</p>
-                </div>
-            </div>
-            <div class="spot-card">
-                <div class="spot-img" style="background-image: url('https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=400');"></div>
-                <div class="spot-info">
-                    <span class="spot-tag">힐링/산책</span>
-                    <h3>경주 황리단길</h3>
-                    <p>한옥의 정취와 맛집이 가득한 거리</p>
-                </div>
-            </div>
-            <div class="spot-card">
-                <div class="spot-img" style="background-image: url('https://images.unsplash.com/photo-1512100356956-c1227c32943c?q=80&w=400');"></div>
-                <div class="spot-info">
-                    <span class="spot-tag">도심여행</span>
-                    <h3>서울 익선동</h3>
-                    <p>과거와 현재가 공존하는 몽글몽글한 골목</p>
-                </div>
-            </div>
+            <c:choose>
+			    <c:when test="${not empty recommends}">
+			        <c:forEach var="place" items="${recommends}">
+			            <div class="spot-card" onclick="location.href='/user/schedule/scheduleForm?p_place=${fn:split(place.p_addr, ' ')[0]} ${place.p_place}'" style="cursor: pointer;">
+			                
+			                <div class="spot-img-wrap">
+	                            <img src="${place.file_path}" class="spot-img" alt="${place.p_place}">
+			                </div>
+			                
+			                <div class="spot-info">
+			                    <h4>${place.p_place}</h4>
+			                    <p>📍 ${place.p_addr}</p>
+			                    <div class="spot-tag">#사람들이_많이_찾는 #추천코스</div>
+			                </div>
+			            </div>
+			        </c:forEach>
+			    </c:when>
+			    <c:otherwise>
+			        <div class="spot-card">
+			             <div class="spot-info"><h4>데이터 준비중</h4></div>
+			        </div>
+			    </c:otherwise>
+			</c:choose>
         </div>
 
         <div class="section-title">

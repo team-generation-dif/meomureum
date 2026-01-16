@@ -13,4 +13,5 @@ public class PlaceDTO {
 	private double p_lon;
 	private String p_addr;
 	private String p_tel;
+	private String file_path;
 }

@@ -126,7 +126,7 @@
 		<div class="schedule-form">
 			<form name="scheduleForm" id="scheduleForm" method="post" action="/user/schedule/schedule">
 				<div class="schedule-text" id="schedule-line">
-					<input type="text" name="p_name" id="p_name" placeholder="여행지를 적어주세요. 예)서울 부산"><br>
+					<input type="text" name="p_name" id="p_name" value="${param.p_place}" placeholder="여행지를 적어주세요. 예)서울 부산"><br>
 				</div>
 				<div class="schedule-cal" id="schedule-line">
 					<input type="text" id="dateSchedule" placeholder="여행 기간을 선택하세요">
