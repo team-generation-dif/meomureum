@@ -65,7 +65,19 @@
     <select id="selectDAOById" parameterType="string" resultType="com.meomureum.springboot.dto.MemberDTO">
         SELECT * FROM MEMBER WHERE M_ID = #{m_id}
     </select>
+    
+	<!-- 전체 회원 수 -->
+    <select id="countAllMembers" resultType="int">
+        SELECT COUNT(*) FROM MEMBER
+    </select>
 
+    <!-- 오늘 신규 가입자 수 -->
+    <select id="countNewMembersToday" resultType="int">
+        SELECT COUNT(*) 
+        FROM MEMBER 
+        WHERE TRUNC(CREATED_AT) = TRUNC(SYSDATE)
+    </select>
+	
     <update id="updateGradeDao">
         UPDATE MEMBER
         SET M_GRADE = #{param2}

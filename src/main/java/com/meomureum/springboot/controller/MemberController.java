@@ -199,7 +199,8 @@ public class MemberController {
     // ==========================================
     // 4. 관리자 영역 (Admin)
     // ==========================================
-
+    
+    // 1. 관리자 센터 메인
     @RequestMapping("/admin/member/main") 
     public String adminMain(Model model) {
         java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
@@ -234,17 +235,19 @@ public class MemberController {
         model.addAttribute("memberCount", (members != null) ? members.size() : 0);
         model.addAttribute("newCount", todayNewMembers);       
         model.addAttribute("newBoardCount", todayNewBoards);   
-        model.addAttribute("reportCount", pendingReportCount); 
+        model.addAttribute("reportCount", pendingReportCount);
 
         // [에러 해결] boards 변수 대신 todayNewBoards를 직접 출력하도록 수정
         System.out.println("====== 대시보드 검증 ======");
         System.out.println("기준 날짜: " + todayStr);
         System.out.println("오늘 신규 게시글: " + todayNewBoards);
         System.out.println("미처리 신고 건수: " + pendingReportCount);
-
-        return "admin/member/main"; 
+                
+               
+        return "admin/member/main"; // → /WEB-INF/views/admin/member/main.jsp
     }
-
+    
+    // 2. 회원 목록
     @RequestMapping("/admin/member/memberList") 
     public String memberList(@RequestParam(value="keyword", required=false) String keyword, Model model) {
         List<MemberDTO> allMembers = (keyword != null && !keyword.isEmpty()) ? memberDAO.searchMembers(keyword) : memberDAO.listDao();
@@ -268,43 +271,62 @@ public class MemberController {
         model.addAttribute("keyword", keyword);
         return "admin/member/memberList"; 
     }
-
+    
+    // 3. 회원 등급 변경
     @PostMapping("/admin/updateGrade")
     public String updateGrade(@RequestParam("m_code") String m_code, @RequestParam("m_grade") String m_grade) {
         memberDAO.updateGradeDao(m_code, m_grade);
         return "redirect:/admin/member/memberList"; 
     }
-
+    
+    // 4. 회원 상세 보기
     @RequestMapping("/admin/member/memberview/{m_code}")
     public String view(@PathVariable("m_code") String m_code, Model model) {
       model.addAttribute("member", memberDAO.viewDao(m_code));
       return "admin/member/memberView";
     }
-
+    
+    // 5. 회원 삭제
     @PostMapping("/admin/delete")
     public String adminDelete(@RequestParam("m_code") String m_code) {
         memberDAO.deleteDao(m_code);
         return "redirect:/admin/member/memberList";
     }
-
+    // 6. 신고 목록 (상태별 조회 + 변수명 통일)
     @RequestMapping("/admin/board/listReports")
-    public String listReports(@RequestParam(name="page", defaultValue="1") int page,
+    public String listReports(@RequestParam(name="status", defaultValue="PENDING") String status,
+                              @RequestParam(name="page", defaultValue="1") int page,
                               @RequestParam(name="size", defaultValue="10") int size,
                               @RequestParam(name="keyword", required=false) String keyword,
                               Model model) {
-      int startRow = (page - 1) * size + 1;
-      int endRow = page * size;
+        int startRow = (page - 1) * size + 1;
+        int endRow = page * size;
 
-      List<ReportDTO> pendingReports = reportDAO.listPendingReports(startRow, endRow, keyword);
-      int totalReports = reportDAO.countPendingReports(keyword);
-      int totalPages = (int) Math.ceil((double) totalReports / size);
+        List<ReportDTO> reports;
+        int totalReports;
 
-      model.addAttribute("pendingReports", pendingReports);
-      model.addAttribute("currentPage", page);
-      model.addAttribute("pageSize", size);
-      model.addAttribute("totalPages", totalPages);
-      model.addAttribute("keyword", keyword);
+        if ("DONE".equalsIgnoreCase(status)) {
+            reports = reportDAO.listDoneReports(startRow, endRow, keyword);
+            totalReports = reportDAO.countDoneReports(keyword);
+        } else if ("IGNORE".equalsIgnoreCase(status)) {
+            reports = reportDAO.listIgnoredReports(startRow, endRow, keyword);
+            totalReports = reportDAO.countIgnoredReports(keyword);
+        } else {
+            reports = reportDAO.listPendingReports(startRow, endRow, keyword);
+            totalReports = reportDAO.countPendingReports(keyword);
+            status = "PENDING";
+        }
 
-      return "admin/board/listReports";
+        int totalPages = (int) Math.ceil((double) totalReports / size);
+
+        // ✅ 변수명 통일: JSP에서 reports로 사용
+        model.addAttribute("reports", reports);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("pageSize", size);
+        model.addAttribute("totalPages", totalPages);
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("status", status);
+
+        return "admin/board/listReports";
     }
 }
