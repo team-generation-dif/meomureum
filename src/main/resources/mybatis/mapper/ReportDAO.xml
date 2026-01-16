@@ -4,7 +4,6 @@
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.meomureum.springboot.dao.IReportDAO">
 
-	<!-- 신고 등록 -->
     <insert id="insertReport" parameterType="com.meomureum.springboot.dto.ReportDTO">
         INSERT INTO report (
             rep_code, rep_category, m_code, rep_title, rep_content, target_code, rep_status, created_at
@@ -20,7 +19,6 @@
         )
     </insert>
     
-	<!-- 신고 목록 조회 -->
     <select id="listReports" resultType="com.meomureum.springboot.dto.ReportDTO">
         SELECT rep_code, rep_category, m_code, rep_title, rep_content, target_code, created_at, rep_status
         FROM report
@@ -33,108 +31,97 @@
         created_at DESC
     </select>
     
-    <!-- 대기중 신고 리스트 (검색 + 페이징) -->
-	<select id="listPendingReports" parameterType="map" resultType="com.meomureum.springboot.dto.ReportDTO">
-    	SELECT *
-    	FROM (
-        	SELECT ROWNUM AS rnum, A.*
-        	FROM (
-            	SELECT *
-            	FROM report
-            	WHERE (rep_status IS NULL OR rep_status = 'PENDING')
-            	<if test="keyword != null and keyword != ''">
-                	AND (rep_title LIKE '%' || #{keyword} || '%' 
-                 	OR rep_content LIKE '%' || #{keyword} || '%')
-            	</if>
-            	ORDER BY rep_code DESC
-        	) A
-        	WHERE ROWNUM &lt;= #{endRow}
-    	)
-    	WHERE rnum &gt;= #{startRow}
-	</select>
+    <select id="listPendingReports" parameterType="map" resultType="com.meomureum.springboot.dto.ReportDTO">
+        SELECT *
+        FROM (
+            SELECT ROWNUM AS rnum, A.*
+            FROM (
+                SELECT *
+                FROM report
+                WHERE (rep_status IS NULL OR rep_status = 'PENDING')
+                <if test="keyword != null and keyword != ''">
+                    AND (rep_title LIKE '%' || #{keyword} || '%' 
+                     OR rep_content LIKE '%' || #{keyword} || '%')
+                </if>
+                ORDER BY rep_code DESC
+            ) A
+            WHERE ROWNUM &lt;= #{endRow}
+        )
+        WHERE rnum &gt;= #{startRow}
+    </select>
 
-	<!-- 대기중 신고 건수 -->
-	<select id="countPendingReports" parameterType="map" resultType="int">
-    	SELECT COUNT(*)
-    	FROM report
-    	WHERE (rep_status IS NULL OR rep_status = 'PENDING')
-    	<if test="keyword != null and keyword != ''">
-        	AND (rep_title LIKE '%' || #{keyword} || '%' 
-         	OR rep_content LIKE '%' || #{keyword} || '%')
-    	</if>
-	</select>
+    <select id="countPendingReports" resultType="int">
+        SELECT COUNT(*)
+        FROM report
+        WHERE (rep_status IS NULL OR rep_status = 'PENDING')
+        <if test="keyword != null and keyword != ''">
+            AND (rep_title LIKE '%' || #{keyword} || '%' 
+             OR rep_content LIKE '%' || #{keyword} || '%')
+        </if>
+    </select>
 
-    <!-- 처리 완료 신고 -->
     <select id="listDoneReports" parameterType="map" resultType="com.meomureum.springboot.dto.ReportDTO">
-    	SELECT * FROM (
-        	SELECT ROWNUM AS rnum, A.*
-        	FROM (
-            	SELECT * FROM report
-            	WHERE rep_status = 'DONE'
-            	<if test="keyword != null and keyword != ''">
-                	AND (rep_title LIKE '%' || #{keyword} || '%' OR rep_content LIKE '%' || #{keyword} || '%')
-            	</if>
-            	ORDER BY rep_code DESC
-        	) A
-        	WHERE ROWNUM &lt;= #{endRow}
-    	)
-    	WHERE rnum &gt;= #{startRow}
-	</select>
-	
-	<select id="countDoneReports" parameterType="map" resultType="int">
-    	SELECT COUNT(*)
-    	FROM report
-    	WHERE rep_status = 'DONE'
-    	<if test="keyword != null and keyword != ''">
-        	AND (rep_title LIKE '%' || #{keyword} || '%' OR rep_content LIKE '%' || #{keyword} || '%')
-    	</if>
-	</select>
-	
-    <!-- 보류된 신고 -->
+        SELECT * FROM (
+            SELECT ROWNUM AS rnum, A.*
+            FROM (
+                SELECT * FROM report
+                WHERE rep_status = 'DONE'
+                <if test="keyword != null and keyword != ''">
+                    AND (rep_title LIKE '%' || #{keyword} || '%' OR rep_content LIKE '%' || #{keyword} || '%')
+                </if>
+                ORDER BY rep_code DESC
+            ) A
+            WHERE ROWNUM &lt;= #{endRow}
+        )
+        WHERE rnum &gt;= #{startRow}
+    </select>
+    
+    <select id="countDoneReports" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+        FROM report
+        WHERE rep_status = 'DONE'
+        <if test="keyword != null and keyword != ''">
+            AND (rep_title LIKE '%' || #{keyword} || '%' OR rep_content LIKE '%' || #{keyword} || '%')
+        </if>
+    </select>
+    
     <select id="listIgnoredReports" parameterType="map" resultType="com.meomureum.springboot.dto.ReportDTO">
-    	SELECT * FROM (
-        	SELECT ROWNUM AS rnum, A.*
-        	FROM (
-            	SELECT * FROM report
-            	WHERE rep_status = 'IGNORE'
-            	<if test="keyword != null and keyword != ''">
-                	AND (rep_title LIKE '%' || #{keyword} || '%' OR rep_content LIKE '%' || #{keyword} || '%')
-            	</if>
-            	ORDER BY rep_code DESC
-        	) A
-        	WHERE ROWNUM &lt;= #{endRow}
-    	)
-    	WHERE rnum &gt;= #{startRow}
-	</select>
+        SELECT * FROM (
+            SELECT ROWNUM AS rnum, A.*
+            FROM (
+                SELECT * FROM report
+                WHERE rep_status = 'IGNORE'
+                <if test="keyword != null and keyword != ''">
+                    AND (rep_title LIKE '%' || #{keyword} || '%' OR rep_content LIKE '%' || #{keyword} || '%')
+                </if>
+                ORDER BY rep_code DESC
+            ) A
+            WHERE ROWNUM &lt;= #{endRow}
+        )
+        WHERE rnum &gt;= #{startRow}
+    </select>
+
+    <select id="countIgnoredReports" resultType="int">
+        SELECT COUNT(*) FROM report
+        WHERE rep_status = 'IGNORE'
+    </select>
     
-    <select id="countIgnoredReports" parameterType="map" resultType="int">
-    	SELECT COUNT(*)
-    	FROM report
-    	WHERE rep_status = 'IGNORE'
-    	<if test="keyword != null and keyword != ''">
-        	AND (rep_title LIKE '%' || #{keyword} || '%' OR rep_content LIKE '%' || #{keyword} || '%')
-    	</if>
-	</select>   
-    
-    <!-- 신고 단건 조회 -->    
-     <select id="findReportByCode" parameterType="String" resultType="com.meomureum.springboot.dto.ReportDTO">
-    	SELECT rep_code, rep_category, m_code, rep_title, rep_content, target_code, created_at, rep_status
-    	FROM report
-   		WHERE rep_code = #{rep_code}
-	 </select>
-	 
-	<!-- 신고 건수용 추가 -->
-	<select id="countReportsByStatus" parameterType="String" resultType="int">
-    	SELECT COUNT(*) 
-    	FROM report 
-    	WHERE rep_status = #{status}
-	</select>
-     <!-- 전체 신고 건수 -->
+    <select id="findReportByCode" parameterType="String" resultType="com.meomureum.springboot.dto.ReportDTO">
+        SELECT rep_code, rep_category, m_code, rep_title, rep_content, target_code, created_at, rep_status
+        FROM report
+        WHERE rep_code = #{rep_code}
+    </select>
+     
+    <select id="countReportsByStatus" parameterType="String" resultType="int">
+        SELECT COUNT(*) 
+        FROM report 
+        WHERE rep_status = #{status}
+    </select>
+
     <select id="countAllReports" resultType="int">
-    	SELECT COUNT(*) FROM report
-	</select>     
+        SELECT COUNT(*) FROM report
+    </select>     
                                                                                                     
-    <!-- 신고 상태 업데이트 -->
     <update id="updateReportStatus" parameterType="com.meomureum.springboot.dto.ReportDTO">
         UPDATE report
         SET rep_status = #{rep_status}
@@ -142,4 +129,3 @@
     </update>            
         
 </mapper>
-

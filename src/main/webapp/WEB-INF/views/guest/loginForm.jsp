@@ -80,9 +80,10 @@
         <button type="submit" class="btn-login">머무름(로그인)</button>
     </form>
     
-    <div class="bottom-links">
-        아직 회원이 아니신가요? <a href="/guest/join">회원가입</a>
-    </div>
+   <div class="bottom-links">
+    아직 회원이 아니신가요? <a href="/guest/join">회원가입</a><br><br>
+    <a href="/" style="color: #b2bec3; font-weight: normal; font-size: 13px;">이전 페이지로 돌아가기</a>
+</div>
 </div>
 
 <script>

@@ -50,8 +50,7 @@
 					</div>
 
 					<div class="journey-content">
-						<span class="s-name">${list.s_name}</span> <span class="p-name">📍
-							${list.p_name}</span>
+						<span class="s-name">${list.s_name}</span>
 					</div>
 					<div class="arrow-icon">❯</div>
 				</a>

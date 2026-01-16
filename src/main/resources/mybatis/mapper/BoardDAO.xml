@@ -5,9 +5,8 @@
 
 <mapper namespace="com.meomureum.springboot.dao.IBoardDAO">
 <select id="countTodayBoards" resultType="int">
-    SELECT COUNT(*) 
-    FROM board 
-    WHERE TO_CHAR(created_at, 'YYYY-MM-DD') = TO_CHAR(SYSDATE, 'YYYY-MM-DD')
+    SELECT COUNT(*) FROM board 
+    WHERE TRUNC(created_at) = TRUNC(SYSDATE)
 </select>
 	<select id="selectBestPosts" resultType="com.meomureum.springboot.dto.BoardDTO">
     <![CDATA[

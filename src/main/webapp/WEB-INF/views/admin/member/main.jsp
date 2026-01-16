@@ -59,25 +59,24 @@
         </div>
         <a href="/user/mypage/main" class="home-btn">🏠 유저 모드로 돌아가기</a>
     </header>
-
-    <div class="stat-grid">
-        <div class="stat-item">
-            <span class="stat-label">전체 회원</span>
-            <div class="stat-value">${memberCount}<span>명</span></div>
-        </div>
-        <div class="stat-item">
-            <span class="stat-label">오늘 신규가입</span>
-            <div class="stat-value" style="color: #a29bfe;">${newCount}<span>명</span></div>
-        </div>
-        <div class="stat-item">
-            <span class="stat-label">새로운 게시물</span>
-            <div class="stat-value">${newBoardCount}<span>건</span></div>
-        </div>
-       <div class="stat-item">
-    <span class="stat-label">미처리 신고</span>
-    <div class="stat-value" style="color: #ff7675;">${reportCount}<span>건</span></div>
-</div>
+<div class="stat-grid">
+    <div class="stat-item">
+        <span class="stat-label">전체 회원</span>
+        <div class="stat-value">${memberCount}<span>명</span></div>
     </div>
+    <div class="stat-item">
+        <span class="stat-label">오늘 신규가입</span>
+        <div class="stat-value" style="color: #a29bfe;">${newCount}<span>명</span></div>
+    </div>
+    <div class="stat-item">
+        <span class="stat-label">새로운 게시물</span>
+        <div class="stat-value">${newBoardCount}<span>건</span></div>
+    </div>
+    <div class="stat-item">
+        <span class="stat-label">미처리 신고</span>
+        <div class="stat-value" style="color: #ff7675;">${reportCount}<span>건</span></div>
+    </div>
+</div>
 
     <div class="menu-grid">
         <a href="/admin/member/memberList" class="menu-card">

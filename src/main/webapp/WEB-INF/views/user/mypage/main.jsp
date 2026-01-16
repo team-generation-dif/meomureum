@@ -35,7 +35,7 @@ body {
 	font-weight: bold;
 	color: #a29bfe;
 	text-align: center;
-	margin-bottom: 40px;
+	margin-bottom: 20px;
 }
 
 .menu-link {
@@ -216,7 +216,9 @@ body {
 <body>
 
 	<nav class="sidebar">
-		<div class="logo">🏠 머무름</div>
+		<div class="logo">
+    <img src="/image/머무름.png" style="width: 200px; height: 200px; vertical-align: middle; margin-right: 8px;">
+</div>
 		<a href="/user/mypage/main" class="menu-link active">내 대시보드</a> 
 		<a href="/user/mypage/myView" class="menu-link">내 정보 상세</a>
 		<a href="/user/schedule/schedule" class="menu-link">여정 관리</a>
@@ -263,10 +265,21 @@ body {
                     <a href="/user/board/detail/${post.b_code}" class="journey-item">
                         <div class="journey-content">
                             <span class="s-name">${post.b_title}</span>
+                            
                             <span class="p-name">
                                 <c:choose>
-                                    <c:when test="${post.b_category == 'free'}">자유게시판</c:when>
-                                    <c:otherwise>기록게시판</c:otherwise>
+                                    <c:when test="${post.b_category == 'info' || post.b_category == '정보공유'}">
+                                        <span style="color: #74b9ff;">[💬 정보공유]</span>
+                                    </c:when>
+                                    <c:when test="${post.b_category == 'review' || post.b_category == '후기'}">
+                                        <span style="color: #a29bfe;">[📝 여행후기]</span>
+                                    </c:when>
+                                    <c:when test="${post.b_category == 'with' || post.b_category == '동행'}">
+                                        <span style="color: #ff7675;">[🤝 동행찾기]</span>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <span style="color: #b2bec3;">[💬 ${post.b_category}]</span>
+                                    </c:otherwise>
                                 </c:choose>
                                 | 조회 ${post.b_view}
                             </span>
@@ -277,7 +290,8 @@ body {
             </c:when>
             <c:otherwise>
                 <div class="empty-msg" style="padding: 20px 0;">
-                    다녀온 여행의 기록을<br>커뮤니티에 공유해보세요! <br> 
+                    아직 작성한 기록이 없습니다.<br>
+                    소중한 여행 이야기를 들려주세요! <br> 
                     <a href="/user/board/list" class="btn-add" style="background: #f1f3ff; color: #a29bfe;">글쓰기</a>
                 </div>
             </c:otherwise>

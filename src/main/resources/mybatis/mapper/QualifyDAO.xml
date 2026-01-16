@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.meomureum.springboot.dao.IQualifyDAO">
+
+    <insert id="insertDao" parameterType="com.meomureum.springboot.dto.QualifyDTO">
+        INSERT INTO qualify (
+            qual_code, 
+            qual_reason, 
+            created_at, 
+            black_email, 
+            black_tel, 
+            m_code
+        ) VALUES (
+            'Q' || LPAD(qualify_seq.NEXTVAL, 6, '0'), 
+            #{qual_reason}, 
+            SYSDATE, 
+            #{black_email}, 
+            #{black_tel}, 
+            #{m_code}
+        )
+    </insert>
+
+    <select id="checkBlocked" resultType="int">
+        SELECT COUNT(*) 
+        FROM qualify 
+        WHERE black_email = #{black_email} OR black_tel = #{black_tel}
+    </select>
+
+</mapper>

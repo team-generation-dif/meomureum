@@ -121,7 +121,7 @@
 	<%@ include file="../../guest/header.jsp" %>
 	<div class="container">
 		<div class="schedule-title">
-			<h3>여행 계획하기</h3>
+			<h3>✈️여행 계획하기</h3>
 		</div>
 		<div class="schedule-form">
 			<form name="scheduleForm" id="scheduleForm" method="post" action="/user/schedule/schedule">
