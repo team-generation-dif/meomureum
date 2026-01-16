@@ -9,6 +9,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.meomureum.springboot.dao.IBoardDAO;
@@ -30,6 +31,11 @@ public class ReportController {
     @Autowired
     private IReplyDAO replyDAO;
 
+    @GetMapping("/admin/member/main")
+    public String adminMain() { 
+        return "admin/member/main"; // → /WEB-INF/views/admin/main.jsp(홈으로 매핑)
+    }
+      
     // 📍 관리자: 신고 목록 조회
     @GetMapping("/admin/board/listreports")
     public String listReports(@RequestParam(name="status", defaultValue="PENDING") String status,
@@ -73,7 +79,8 @@ public class ReportController {
     // 신고 처리 (예: 삭제)
     @PostMapping("/admin/board/listreports/process")
     public String processReport(@RequestParam("rep_code") String rep_code,
-                                @RequestParam("action") String action) {
+                                @RequestParam("action") String action,
+                                Authentication authentication) {
         ReportDTO dto = new ReportDTO();
         dto.setRep_code(rep_code);
         
@@ -95,8 +102,8 @@ public class ReportController {
             dto.setRep_status("IGNORE");
             reportDAO.updateReportStatus(dto);
         }
-
-        return "redirect:/admin/board/listreports";
+               
+        return "redirect:/admin/board/listreports?status=PENDING";
     }
 
 

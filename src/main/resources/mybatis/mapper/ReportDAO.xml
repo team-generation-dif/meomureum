@@ -133,7 +133,7 @@
     <select id="countAllReports" resultType="int">
     	SELECT COUNT(*) FROM report
 	</select>     
-               
+                                                                                                    
     <!-- 신고 상태 업데이트 -->
     <update id="updateReportStatus" parameterType="com.meomureum.springboot.dto.ReportDTO">
         UPDATE report
