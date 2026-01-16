@@ -87,6 +87,7 @@ function addRoute(day, place) {
         <input type="hidden" name="p_lat" value="${place.y}">
         <input type="hidden" name="p_lon" value="${place.x}">
         <input type="hidden" name="p_addr" value="${place.road_address_name || place.address_name}">
+		<input type="hidden" name="p_tel" value="${place.phone || ''}">
     `;
     
     targetList.appendChild(li);

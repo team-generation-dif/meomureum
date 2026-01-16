@@ -19,10 +19,8 @@ public interface IMemberDAO {
     List<MemberDTO> searchMembers(String keyword); // 검색 목록 (추가)
     
     // [추가] 관리자용 등급 수정 메서드
-    int updateGradeDao(String m_code, String m_grade);
-    
-    // 관리자 센터용 카운트 메서드
-    int countAllMembers();		// 전체 회원 수
-    int countNewMembersToday();	// 오늘 신규 가입자 수
-    int countTodayBoards(); 
+    public int updateGradeDao(String m_code, String m_grade);
+ // --- [추가] 통계용 메서드 ---
+    public int getTotalMemberCount();    // 전체 회원 수
+    public int getTodayMemberCount();    // 오늘 신규 가입자 수
 }

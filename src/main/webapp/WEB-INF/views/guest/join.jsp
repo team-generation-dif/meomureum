@@ -138,6 +138,11 @@
 
         <button type="submit" class="btn-submit" id="submitBtn" disabled>기록 시작하기</button>
     </form>
+    <div style="margin-top: 30px; text-align: center; font-size: 14px; color: #b2bec3;">
+        이미 회원이신가요? <a href="/guest/loginForm" style="color: #a29bfe; text-decoration: none; font-weight: bold; margin-left: 5px;">로그인하기</a>
+        <br><br>
+        <a href="javascript:history.back();" style="color: #ccc; text-decoration: none; font-size: 13px;">이전 페이지로</a>
+    </div>
 </div>
 
 <script>

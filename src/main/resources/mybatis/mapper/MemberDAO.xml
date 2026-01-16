@@ -83,5 +83,11 @@
         SET M_GRADE = #{param2}
         WHERE M_CODE = #{param1}
     </update>
-
+<select id="getTotalMemberCount" resultType="int">
+    SELECT COUNT(*) FROM member
+</select>
+<select id="getTodayMemberCount" resultType="int">
+    SELECT COUNT(*) FROM member 
+     WHERE TRUNC(created_at) = TRUNC(SYSDATE)
+</select>
 </mapper>

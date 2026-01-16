@@ -13,4 +13,5 @@ public class ScheduleDTO {
 	private String s_end;
 	private String s_name;
 	private String p_name;
+	
 }

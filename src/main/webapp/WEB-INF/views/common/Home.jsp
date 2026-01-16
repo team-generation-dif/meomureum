@@ -69,7 +69,6 @@
 
         <div class="section-title">
             <h2><span>📍</span>지금 떠나기 좋은 추천 장소</h2>
-            <a href="/user/spot/list" class="btn-more">전체보기 ></a>
         </div>
         <div class="spot-grid">
             <%-- 추천 장소 (현재 고정값, 나중에 DB 연동 시 동일하게 c:forEach 사용 가능) --%>

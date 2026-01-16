@@ -19,11 +19,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.meomureum.springboot.dao.IBoardDAO;
 import com.meomureum.springboot.dao.IMemberDAO;
+import com.meomureum.springboot.dao.IQualifyDAO;
 import com.meomureum.springboot.dao.IReportDAO;
 import com.meomureum.springboot.dao.IScheduleDAO;
 import com.meomureum.springboot.dto.BoardDTO;
 import com.meomureum.springboot.dto.MemberDTO;
 import com.meomureum.springboot.dto.PlaceDTO;
+import com.meomureum.springboot.dto.QualifyDTO;
 import com.meomureum.springboot.dto.ReportDTO;
 import com.meomureum.springboot.dto.ScheduleDTO;
 
@@ -33,6 +35,7 @@ public class MemberController {
     @Autowired private IMemberDAO memberDAO;
     @Autowired private IScheduleDAO scheduleDAO;
     @Autowired private IBoardDAO boardDAO;
+    @Autowired private IQualifyDAO qualDAO;
     @Autowired private IReportDAO reportDAO;
     @Autowired private PasswordEncoder passwordEncoder;
     
@@ -48,40 +51,45 @@ public class MemberController {
         return "redirect:/user/mypage/main";
     }
     
-    // 추천 장소 3개 뽑기 (코드 중복 방지용)
+    // 추천 장소 3개 뽑기
     private List<PlaceDTO> getRecommendedPlaces() {
         List<PlaceDTO> topPlaces = scheduleDAO.listDAOByCntPcode();
-        
-        // 데이터가 3개 미만이면 그냥 다 리턴
-        if (topPlaces.size() <= 3) {
-            return topPlaces;
-        }
-
-        // 리스트를 랜덤하게 섞고 
+        if (topPlaces.size() <= 3) return topPlaces;
         Collections.shuffle(topPlaces);
-        // 앞에서 3개만 잘라서 전달
         return topPlaces.stream().limit(3).collect(Collectors.toList());
     }
     
     @RequestMapping("/Home")
     public String homeIntro(Model model) {
-        List<BoardDTO> bestPosts = boardDAO.listDao(); 
-        model.addAttribute("bestPosts", bestPosts);
+        model.addAttribute("bestPosts", boardDAO.listDao());
         model.addAttribute("recommends", getRecommendedPlaces());
         return "common/Home";
     }
 
     @RequestMapping("/")
     public String index(Model model) {
-    	model.addAttribute("recommends", getRecommendedPlaces());
-    	return "guest/main"; 
-	}
+        model.addAttribute("recommends", getRecommendedPlaces());
+        return "guest/main"; 
+    }
+
+    // ==========================================
+    // 1. 게스트 영역 (Join & Login)
+    // ==========================================
 
     @RequestMapping(value = "/guest/join", method = RequestMethod.GET)
     public String joinForm() { return "guest/join"; }
 
     @RequestMapping(value = "/guest/join", method = RequestMethod.POST)
-    public String join(MemberDTO memberDto) {
+    public String join(MemberDTO memberDto, Model model) {
+        // [재가입 방지] 블랙리스트 테이블 조회
+        int isBlocked = qualDAO.checkBlocked(memberDto.getM_email(), memberDto.getM_tel());
+        
+        if (isBlocked > 0) {
+            model.addAttribute("msg", "운영 정책 위반으로 인해 해당 정보로는 재가입이 불가합니다.");
+            model.addAttribute("url", "/guest/loginForm");
+            return "common/alert"; 
+        }
+
         memberDto.setM_passwd(passwordEncoder.encode(memberDto.getM_passwd()));
         memberDto.setM_auth(memberDto.getM_id().equals("admin") ? "ADMIN" : "USER");
         memberDto.setM_grade("BASIC");
@@ -92,8 +100,7 @@ public class MemberController {
     @RequestMapping(value = "/guest/idCheck", method = RequestMethod.GET)
     public String idCheck(@RequestParam(value="m_id", required=false) String m_id, Model model) {
         if (m_id != null && !m_id.trim().isEmpty()) {
-            int result = memberDAO.checkId(m_id); 
-            model.addAttribute("result", result);
+            model.addAttribute("result", memberDAO.checkId(m_id));
             model.addAttribute("m_id", m_id);
         }
         return "guest/idCheck";
@@ -106,29 +113,16 @@ public class MemberController {
     public String loginForm() { return "guest/loginForm"; }
 
     // ==========================================
-    // 2. 유저 영역 (User)
+    // 2. 유저 영역 (Mypage)
     // ==========================================
 
     @RequestMapping("/user/mypage/main")
     public String usermain(Authentication authentication, Model model) { 
         String m_id = authentication.getName();
         MemberDTO dto = memberDAO.selectDAOById(m_id); 
-        
-        // [수정] 여정 리스트 가져오기
-        List<ScheduleDTO> scheduleDTO = scheduleDAO.listDAOByMCode(dto.getM_code());
-        model.addAttribute("schedules", scheduleDTO);
-
-        // [추가] 내가 쓴 최근 게시글 3개 가져오기
-        List<BoardDTO> myRecentPosts = boardDAO.getMyRecentPosts(dto.getM_code());
-        model.addAttribute("myRecentPosts", myRecentPosts);
-
+        model.addAttribute("schedules", scheduleDAO.listDAOByMCode(dto.getM_code()));
+        model.addAttribute("myRecentPosts", boardDAO.getMyRecentPosts(dto.getM_code()));
         return "user/mypage/main"; 
-    }
-
-    @RequestMapping("/user/mypage/confirmPwForm")
-    public String confirmPwForm(@RequestParam("mode") String mode, Model model) {
-      model.addAttribute("mode", mode);
-      return "user/mypage/confirmPw"; 
     }
 
     @PostMapping("/user/mypage/checkPw")
@@ -137,7 +131,6 @@ public class MemberController {
                         Authentication authentication, 
                         jakarta.servlet.http.HttpServletRequest request,
                         Model model) {
-      
       String m_id = authentication.getName();
       MemberDTO dto = memberDAO.selectDAOById(m_id);
       
@@ -147,31 +140,20 @@ public class MemberController {
               request.getSession().invalidate();
               org.springframework.security.core.context.SecurityContextHolder.clearContext();
               return "redirect:/guest/loginForm?message=deleted";
-          } else {
-              model.addAttribute("edit", dto);
-              return "user/mypage/myUpdateView"; 
           }
-      } else {
-          model.addAttribute("error", "비밀번호가 일치하지 않습니다.");
-          model.addAttribute("mode", mode);
-          return "user/mypage/confirmPw";
+          model.addAttribute("edit", dto);
+          return "user/mypage/myUpdateView"; 
       }
+      model.addAttribute("error", "비밀번호가 일치하지 않습니다.");
+      model.addAttribute("mode", mode);
+      return "user/mypage/confirmPw";
     }
 
     @RequestMapping("/user/mypage/myView")
     public String myView(Authentication authentication, Model model) {
-       String m_id = authentication.getName();
-       MemberDTO dto = memberDAO.selectDAOById(m_id); 
+       MemberDTO dto = memberDAO.selectDAOById(authentication.getName()); 
        model.addAttribute("view", dto);
        return "user/mypage/myView"; 
-    }
-
-    @RequestMapping("/user/mypage/UpdateForm")
-    public String updateForm(Authentication authentication, Model model) {
-       String m_id = authentication.getName();
-       MemberDTO dto = memberDAO.selectDAOById(m_id); 
-       model.addAttribute("edit", dto);
-       return "user/mypage/myUpdateView"; 
     }
 
     @PostMapping("/user/update")
@@ -183,103 +165,54 @@ public class MemberController {
         return "redirect:/user/mypage/myView";
     }
 
-    @PostMapping("/user/delete")
-    public String userDelete(Authentication authentication, 
-                             jakarta.servlet.http.HttpServletRequest request) {
-        String m_id = authentication.getName();
-        MemberDTO dto = memberDAO.selectDAOById(m_id);
-        if (dto != null) {
-            memberDAO.deleteDao(dto.getM_code());
-        }
-        request.getSession().invalidate();
-        org.springframework.security.core.context.SecurityContextHolder.clearContext();
-        return "redirect:/guest/loginForm?message=deleted"; 
-    }
-
     // ==========================================
-    // 4. 관리자 영역 (Admin)
+    // 3. 관리자 영역 (Admin)
     // ==========================================
     
     // 1. 관리자 센터 메인
     @RequestMapping("/admin/member/main") 
     public String adminMain(Model model) {
-        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
-        String todayStr = sdf.format(new java.util.Date());
-
-        // --- [1] 전체 회원 및 오늘 신규 가입자 ---
-        List<MemberDTO> members = memberDAO.listDao();
-        long todayNewMembers = 0;
-        if (members != null) {
-            todayNewMembers = members.stream()
-                .filter(m -> {
-                    if (m.getCreated_at() == null) return false;
-                    return String.valueOf(m.getCreated_at()).startsWith(todayStr);
-                }).count();
-        }
-
-        // --- [2] 오늘 새로운 게시글 수 (DB 직접 카운트) ---
-        int todayNewBoards = boardDAO.countTodayBoards();
-
-        // --- [3] 미처리 신고 건수 ---
-        List<ReportDTO> reports = reportDAO.listReports();
-        long pendingReportCount = 0;
-        if (reports != null) {
-            pendingReportCount = reports.stream()
-                .filter(r -> {
-                    String status = r.getRep_status();
-                    return status == null || "PENDING".equalsIgnoreCase(status.trim()) || status.isEmpty();
-                }).count();
-        }
-
-        // 4. 모델에 데이터 전달
-        model.addAttribute("memberCount", (members != null) ? members.size() : 0);
-        model.addAttribute("newCount", todayNewMembers);       
-        model.addAttribute("newBoardCount", todayNewBoards);   
-        model.addAttribute("reportCount", pendingReportCount);
-
-        // [에러 해결] boards 변수 대신 todayNewBoards를 직접 출력하도록 수정
-        System.out.println("====== 대시보드 검증 ======");
-        System.out.println("기준 날짜: " + todayStr);
-        System.out.println("오늘 신규 게시글: " + todayNewBoards);
-        System.out.println("미처리 신고 건수: " + pendingReportCount);
-                
-               
-        return "admin/member/main"; // → /WEB-INF/views/admin/member/main.jsp
+        try {
+            model.addAttribute("memberCount", memberDAO.getTotalMemberCount());
+            model.addAttribute("newCount", memberDAO.getTodayMemberCount());
+            model.addAttribute("newBoardCount", boardDAO.countTodayBoards()); 
+            model.addAttribute("reportCount", reportDAO.countPendingReports(null)); 
+        } catch (Exception e) { e.printStackTrace(); }
+        return "admin/member/main"; 
     }
-    
-    // 2. 회원 목록
+
+    @PostMapping("/admin/updateGrade")
+    public String updateGrade(@RequestParam("m_code") String m_code, 
+                              @RequestParam("m_grade") String m_grade) {
+        
+        // 블랙리스트 선택 시: 강제 탈퇴 처리
+        if ("BLACKLIST".equals(m_grade)) {
+            MemberDTO member = memberDAO.viewDao(m_code);
+            if (member != null) {
+                QualifyDTO qual = new QualifyDTO();
+                qual.setM_code(m_code);
+                qual.setBlack_email(member.getM_email());
+                qual.setBlack_tel(member.getM_tel());
+                qual.setQual_reason("영구 블랙리스트 제명");
+                qualDAO.insertDao(qual);
+                memberDAO.deleteDao(m_code);
+                return "redirect:/admin/member/memberList";
+            }
+        } 
+        // 일반 및 이용제한 등급 변경
+        memberDAO.updateGradeDao(m_code, m_grade);
+        return "redirect:/admin/member/memberview/" + m_code;
+    }
+
     @RequestMapping("/admin/member/memberList") 
     public String memberList(@RequestParam(value="keyword", required=false) String keyword, Model model) {
         List<MemberDTO> allMembers = (keyword != null && !keyword.isEmpty()) ? memberDAO.searchMembers(keyword) : memberDAO.listDao();
-
-        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
-        String todayStr = sdf.format(new java.util.Date());
-        long newMemberCount = 0;
-        
-        if (allMembers != null) {
-            newMemberCount = allMembers.stream()
-                .filter(m -> {
-                    Object createdAt = m.getCreated_at();
-                    if (createdAt == null) return false;
-                    String memberJoinDate = (createdAt instanceof java.util.Date) ? sdf.format(createdAt) : createdAt.toString().substring(0, 10);
-                    return todayStr.equals(memberJoinDate);
-                }).count();
-        }
-        
-        model.addAttribute("newCount", newMemberCount);
         model.addAttribute("members", allMembers);
         model.addAttribute("keyword", keyword);
+        model.addAttribute("newCount", memberDAO.getTodayMemberCount());
         return "admin/member/memberList"; 
     }
-    
-    // 3. 회원 등급 변경
-    @PostMapping("/admin/updateGrade")
-    public String updateGrade(@RequestParam("m_code") String m_code, @RequestParam("m_grade") String m_grade) {
-        memberDAO.updateGradeDao(m_code, m_grade);
-        return "redirect:/admin/member/memberList"; 
-    }
-    
-    // 4. 회원 상세 보기
+
     @RequestMapping("/admin/member/memberview/{m_code}")
     public String view(@PathVariable("m_code") String m_code, Model model) {
       model.addAttribute("member", memberDAO.viewDao(m_code));
