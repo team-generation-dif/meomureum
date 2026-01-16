@@ -27,13 +27,13 @@ import com.meomureum.springboot.dto.ScheduleDTO;
 @Controller
 public class MemberController {
 
-	@Autowired private IMemberDAO memberDAO;
+    @Autowired private IMemberDAO memberDAO;
     @Autowired private IScheduleDAO scheduleDAO;
     @Autowired private IBoardDAO boardDAO;
-    @Autowired private IReportDAO reportDAO; // 1. 신고 DAO 주입 필수!
+    @Autowired private IReportDAO reportDAO;
     @Autowired private PasswordEncoder passwordEncoder;
     
-    // 0. 로그인 성공 후 분기 처리
+    // [0] 로그인 성공 후 분기 처리
     @RequestMapping("/loginSuccess")
     public String loginSuccess(Authentication authentication) {
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
@@ -47,13 +47,11 @@ public class MemberController {
 
     @RequestMapping("/Home")
     public String homeIntro(Model model) {
-        // [수정] 실시간 인기 게시글 4개를 가져와서 모델에 담기
-        // selectBestPosts()는 조회수(hit) 순으로 상위 4개를 가져오는 메서드라고 가정합니다.
         List<BoardDTO> bestPosts = boardDAO.listDao(); 
         model.addAttribute("bestPosts", bestPosts);
-        
         return "common/Home";
     }
+
     @RequestMapping("/")
     public String index() { return "guest/main"; }
 
@@ -91,11 +89,17 @@ public class MemberController {
 
     @RequestMapping("/user/mypage/main")
     public String usermain(Authentication authentication, Model model) { 
-    	String m_id = authentication.getName();
+        String m_id = authentication.getName();
         MemberDTO dto = memberDAO.selectDAOById(m_id); 
-        List<ScheduleDTO> scheduleDTO = scheduleDAO.listDAOByMCode(dto.getM_code());
         
+        // [수정] 여정 리스트 가져오기
+        List<ScheduleDTO> scheduleDTO = scheduleDAO.listDAOByMCode(dto.getM_code());
         model.addAttribute("schedules", scheduleDTO);
+
+        // [추가] 내가 쓴 최근 게시글 3개 가져오기
+        List<BoardDTO> myRecentPosts = boardDAO.getMyRecentPosts(dto.getM_code());
+        model.addAttribute("myRecentPosts", myRecentPosts);
+
         return "user/mypage/main"; 
     }
 
@@ -170,14 +174,12 @@ public class MemberController {
         return "redirect:/guest/loginForm?message=deleted"; 
     }
 
- // ==========================================
- // 4. 관리자 영역 (Admin)
- // ==========================================
+    // ==========================================
+    // 4. 관리자 영역 (Admin)
+    // ==========================================
 
- // [1] 관리자 메인 대시보드 페이지
     @RequestMapping("/admin/member/main") 
     public String adminMain(Model model) {
-        // 1. 오늘 날짜 구하기 (yyyy-MM-dd)
         java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
         String todayStr = sdf.format(new java.util.Date());
 
@@ -188,31 +190,20 @@ public class MemberController {
             todayNewMembers = members.stream()
                 .filter(m -> {
                     if (m.getCreated_at() == null) return false;
-                    // 날짜 객체든 문자열이든 yyyy-MM-dd 부분만 비교
                     return String.valueOf(m.getCreated_at()).startsWith(todayStr);
                 }).count();
         }
 
-        // --- [2] 오늘 새로운 게시글 수 (수정됨) ---
-        List<BoardDTO> boards = boardDAO.listDao(); 
-        long todayNewBoards = 0;
-        if (boards != null) {
-            todayNewBoards = boards.stream()
-                .filter(b -> {
-                    // b.getCreated_at()이 날짜 타입인 경우 toString() 하면 "2024-05-20 ..." 형식이 됨
-                    Object boardDate = b.getCreated_at(); 
-                    return boardDate != null && String.valueOf(boardDate).startsWith(todayStr);
-                }).count();
-        }
+        // --- [2] 오늘 새로운 게시글 수 (DB 직접 카운트) ---
+        int todayNewBoards = boardDAO.countTodayBoards();
 
-        // --- [3] 미처리 신고 건수 (rep_status가 'PENDING' 혹은 null/빈값인 경우) ---
+        // --- [3] 미처리 신고 건수 ---
         List<ReportDTO> reports = reportDAO.listReports();
         long pendingReportCount = 0;
         if (reports != null) {
             pendingReportCount = reports.stream()
                 .filter(r -> {
                     String status = r.getRep_status();
-                    // 상태가 없거나(null), PENDING인 경우 모두 미처리로 간주
                     return status == null || "PENDING".equalsIgnoreCase(status.trim()) || status.isEmpty();
                 }).count();
         }
@@ -223,108 +214,75 @@ public class MemberController {
         model.addAttribute("newBoardCount", todayNewBoards);   
         model.addAttribute("reportCount", pendingReportCount); 
 
-        // 디버깅: 데이터가 안 나올 경우 이클립스 Console 창을 확인하세요.
+        // [에러 해결] boards 변수 대신 todayNewBoards를 직접 출력하도록 수정
         System.out.println("====== 대시보드 검증 ======");
         System.out.println("기준 날짜: " + todayStr);
-        System.out.println("전체 게시글 수: " + (boards != null ? boards.size() : "null"));
         System.out.println("오늘 신규 게시글: " + todayNewBoards);
-        System.out.println("전체 신고 건수: " + (reports != null ? reports.size() : "null"));
         System.out.println("미처리 신고 건수: " + pendingReportCount);
 
         return "admin/member/main"; 
     }
-//[2] 전체 회원 리스트 페이지
- @RequestMapping("/admin/member/memberList") 
- public String memberList(
-         @RequestParam(value="keyword", required=false) String keyword, 
-         Model model) {
-     
-     List<MemberDTO> allMembers;
-     if (keyword != null && !keyword.isEmpty()) {
-         allMembers = memberDAO.searchMembers(keyword);
-     } else {
-         allMembers = memberDAO.listDao();
-     }
 
-     // --- [날짜 비교 로직 시작] ---
-     java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
-     String todayStr = sdf.format(new java.util.Date());
+    @RequestMapping("/admin/member/memberList") 
+    public String memberList(@RequestParam(value="keyword", required=false) String keyword, Model model) {
+        List<MemberDTO> allMembers = (keyword != null && !keyword.isEmpty()) ? memberDAO.searchMembers(keyword) : memberDAO.listDao();
 
-     long newMemberCount = 0;
-     
-     if (allMembers != null) {
-         newMemberCount = allMembers.stream()
-             .filter(m -> {
-                 Object createdAt = m.getCreated_at(); // 데이터를 Object로 받음
-                 if (createdAt == null) return false;
-                 
-                 String memberJoinDate = "";
-                 if (createdAt instanceof java.util.Date) {
-                     memberJoinDate = sdf.format(createdAt);
-                 } else {
-                     // String 타입일 경우 앞의 10자(yyyy-MM-dd)만 추출
-                     memberJoinDate = createdAt.toString().substring(0, 10);
-                 }
-                 return todayStr.equals(memberJoinDate);
-             })
-             .count();
-     }
-     
-     // 콘솔창에서 확인용 (숫자가 나오는지 꼭 확인해보세요!)
-     System.out.println("오늘 날짜: " + todayStr);
-     System.out.println("오늘 가입자 수: " + newMemberCount);
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
+        String todayStr = sdf.format(new java.util.Date());
+        long newMemberCount = 0;
+        
+        if (allMembers != null) {
+            newMemberCount = allMembers.stream()
+                .filter(m -> {
+                    Object createdAt = m.getCreated_at();
+                    if (createdAt == null) return false;
+                    String memberJoinDate = (createdAt instanceof java.util.Date) ? sdf.format(createdAt) : createdAt.toString().substring(0, 10);
+                    return todayStr.equals(memberJoinDate);
+                }).count();
+        }
+        
+        model.addAttribute("newCount", newMemberCount);
+        model.addAttribute("members", allMembers);
+        model.addAttribute("keyword", keyword);
+        return "admin/member/memberList"; 
+    }
 
-     model.addAttribute("newCount", newMemberCount); // JSP에서 ${newCount}와 일치해야 함
-     model.addAttribute("members", allMembers);
-     model.addAttribute("keyword", keyword);
-     
-     return "admin/member/memberList"; 
- }
+    @PostMapping("/admin/updateGrade")
+    public String updateGrade(@RequestParam("m_code") String m_code, @RequestParam("m_grade") String m_grade) {
+        memberDAO.updateGradeDao(m_code, m_grade);
+        return "redirect:/admin/member/memberList"; 
+    }
 
- // [3] 회원 등급 수정
- @PostMapping("/admin/updateGrade")
- public String updateGrade(@RequestParam("m_code") String m_code, 
-                            @RequestParam("m_grade") String m_grade) {
-     memberDAO.updateGradeDao(m_code, m_grade);
-     return "redirect:/admin/member/memberList"; 
- }
+    @RequestMapping("/admin/member/memberview/{m_code}")
+    public String view(@PathVariable("m_code") String m_code, Model model) {
+      model.addAttribute("member", memberDAO.viewDao(m_code));
+      return "admin/member/memberView";
+    }
 
-//141행 근처
-//[4] 회원 상세 보기
-//기존: @RequestMapping("/admin/member/view/{m_code}")
-//수정: 'view' 앞에 'member'를 붙여 'memberview'로 변경합니다.
-@RequestMapping("/admin/member/memberview/{m_code}")
-public String view(@PathVariable("m_code") String m_code, Model model) {
-  model.addAttribute("member", memberDAO.viewDao(m_code));
-  return "admin/member/memberView"; // 실제 JSP 파일 위치
-}
+    @PostMapping("/admin/delete")
+    public String adminDelete(@RequestParam("m_code") String m_code) {
+        memberDAO.deleteDao(m_code);
+        return "redirect:/admin/member/memberList";
+    }
 
- // [5] 관리자 권한으로 회원 삭제
- @PostMapping("/admin/delete")
- public String adminDelete(@RequestParam("m_code") String m_code) {
-     memberDAO.deleteDao(m_code);
-     return "redirect:/admin/member/memberList";
- }
-//[6] 신고 리스트 페이지 (수정)
-@RequestMapping("/admin/board/listReports")
-public String listReports(@RequestParam(name="page", defaultValue="1") int page,
-                          @RequestParam(name="size", defaultValue="10") int size,
-                          @RequestParam(name="keyword", required=false) String keyword,
-                        Model model) {
-  int startRow = (page - 1) * size + 1;
-  int endRow = page * size;
+    @RequestMapping("/admin/board/listReports")
+    public String listReports(@RequestParam(name="page", defaultValue="1") int page,
+                              @RequestParam(name="size", defaultValue="10") int size,
+                              @RequestParam(name="keyword", required=false) String keyword,
+                              Model model) {
+      int startRow = (page - 1) * size + 1;
+      int endRow = page * size;
 
-  // 상태별로 DAO 호출
-  List<ReportDTO> pendingReports = reportDAO.listPendingReports(startRow, endRow, keyword);
-  int totalReports = reportDAO.countPendingReports(keyword);
-  int totalPages = (int) Math.ceil((double) totalReports / size);
+      List<ReportDTO> pendingReports = reportDAO.listPendingReports(startRow, endRow, keyword);
+      int totalReports = reportDAO.countPendingReports(keyword);
+      int totalPages = (int) Math.ceil((double) totalReports / size);
 
-  model.addAttribute("pendingReports", pendingReports);
-  model.addAttribute("currentPage", page);
-  model.addAttribute("pageSize", size);
-  model.addAttribute("totalPages", totalPages);
-  model.addAttribute("keyword", keyword);
+      model.addAttribute("pendingReports", pendingReports);
+      model.addAttribute("currentPage", page);
+      model.addAttribute("pageSize", size);
+      model.addAttribute("totalPages", totalPages);
+      model.addAttribute("keyword", keyword);
 
-  return "admin/board/listReports";
-	}
+      return "admin/board/listReports";
+    }
 }

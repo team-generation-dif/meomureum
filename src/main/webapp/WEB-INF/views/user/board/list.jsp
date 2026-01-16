@@ -77,7 +77,7 @@
         <h1 class="table-title">커뮤니티 광장</h1>
         <c:choose>
             <c:when test="${pageContext.request.userPrincipal.name == 'admin'}">
-                <a href="/admin/member/main" class="btn-home-back">🏠 관리자 메인</a>
+                <a href="/admin/member/main" class="btn-home-back">🏠 메인으로 이동</a>
             </c:when>
             <c:otherwise>
                 <a href="/user/mypage/main" class="btn-home-back">🏠 메인으로 이동</a>

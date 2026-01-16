@@ -102,7 +102,7 @@
 
     <div class="footer-area">
         <a href="/user/mypage/main" class="btn-home">
-            🏠 마이페이지로 돌아가기
+            🏠 메인으로 이동
         </a>
     </div>
 </div>

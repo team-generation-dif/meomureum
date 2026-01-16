@@ -5,7 +5,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>신고 관리 목록</title>
+<title>머무름 - 신고 관리 대시보드</title>
 <link href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" rel="stylesheet">
 
 <style>
@@ -15,6 +15,7 @@
 
 </head>
 <body>
+
 <div class="container">
 
 <h3>신고 관리 목록</h3>
@@ -92,6 +93,12 @@ document.addEventListener("DOMContentLoaded", function() {
    			class="${i == currentPage ? 'active' : ''}">${i}</a>
     </c:forEach>
 </div>
+
+<div class="bottom-btn-container">
+    <a href="/admin/member/main" class="btn-home-normal">
+        <span class="glyphicon glyphicon-home"></span> 메인으로 돌아가기
+    </a>
 </div>
+
 </body>
 </html>
