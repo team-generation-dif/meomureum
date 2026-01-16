@@ -120,7 +120,7 @@
             </div>
         </a>
 
-        <a href="/admin/board/listReports" class="menu-card" style="background: #fffcfc;">
+        <a href="/admin/board/listreports?status=PENDING" class="menu-card" style="background: #fffcfc;">
             <div>
                 <span class="menu-icon">🚨</span>
                 <div class="menu-info">
