@@ -68,31 +68,6 @@
         z-index: 10;
     }
     .resizer:hover { background: var(--primary-color); }
-	
-    /* 상단 내비게이션 바 (메인으로 돌아가기 추가) */
-    .plan-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-    }
-
-    .btn-home {
-        background: white;
-        border: 1px solid var(--primary-color);
-        color: var(--primary-color);
-        padding: 6px 15px;
-        border-radius: 8px;
-        text-decoration: none;
-        font-size: 0.85rem;
-        font-weight: 600;
-        transition: 0.2s;
-    }
-
-    .btn-home:hover {
-        background: var(--primary-color);
-        color: white;
-    }
 
 	/* [입력 폼 스타일] */
     input[type="text"], textarea {
@@ -267,11 +242,6 @@
 	    </div>
 	    <div id="resizer-sidebar" class="resizer"></div>
 	    <div id="left-content" class="pane content">
-	       
-            <div class="plan-header">
-                <a href="/user/mypage/main" class="btn-home">← 메인으로</a>
-                <span style="font-size: 0.85rem; color: #b2bec3;">새로운 추억을 계획해보세요</span>
-            </div>
 
 			<form name="schedule" method="post" action="/user/schedule/insertSchedule" onsubmit="return validateForm()">
 				<c:if test="${mode == 'new'}">
