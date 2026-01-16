@@ -208,6 +208,7 @@ public class MemberController {
         List<MemberDTO> allMembers = (keyword != null && !keyword.isEmpty()) ? memberDAO.searchMembers(keyword) : memberDAO.listDao();
         model.addAttribute("members", allMembers);
         model.addAttribute("keyword", keyword);
+        model.addAttribute("newCount", memberDAO.getTodayMemberCount());
         return "admin/member/memberList"; 
     }
 
