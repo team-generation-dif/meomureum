@@ -1,7 +1,9 @@
 package com.meomureum.springboot.controller;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -21,6 +23,7 @@ import com.meomureum.springboot.dao.IReportDAO;
 import com.meomureum.springboot.dao.IScheduleDAO;
 import com.meomureum.springboot.dto.BoardDTO;
 import com.meomureum.springboot.dto.MemberDTO;
+import com.meomureum.springboot.dto.PlaceDTO;
 import com.meomureum.springboot.dto.ReportDTO;
 import com.meomureum.springboot.dto.ScheduleDTO;
 
@@ -44,16 +47,35 @@ public class MemberController {
         }
         return "redirect:/user/mypage/main";
     }
+    
+    // 추천 장소 3개 뽑기 (코드 중복 방지용)
+    private List<PlaceDTO> getRecommendedPlaces() {
+        List<PlaceDTO> topPlaces = scheduleDAO.listDAOByCntPcode();
+        
+        // 데이터가 3개 미만이면 그냥 다 리턴
+        if (topPlaces.size() <= 3) {
+            return topPlaces;
+        }
 
+        // 리스트를 랜덤하게 섞고 
+        Collections.shuffle(topPlaces);
+        // 앞에서 3개만 잘라서 전달
+        return topPlaces.stream().limit(3).collect(Collectors.toList());
+    }
+    
     @RequestMapping("/Home")
     public String homeIntro(Model model) {
         List<BoardDTO> bestPosts = boardDAO.listDao(); 
         model.addAttribute("bestPosts", bestPosts);
+        model.addAttribute("recommends", getRecommendedPlaces());
         return "common/Home";
     }
 
     @RequestMapping("/")
-    public String index() { return "guest/main"; }
+    public String index(Model model) {
+    	model.addAttribute("recommends", getRecommendedPlaces());
+    	return "guest/main"; 
+	}
 
     @RequestMapping(value = "/guest/join", method = RequestMethod.GET)
     public String joinForm() { return "guest/join"; }

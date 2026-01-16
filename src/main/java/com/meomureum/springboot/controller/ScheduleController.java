@@ -53,7 +53,6 @@ public class ScheduleController {
 	
 	@RequestMapping("/user/schedule/scheduleForm")
 	public String scheduleForm() {
-		
 		return "user/schedule/scheduleForm";
 	}
 	

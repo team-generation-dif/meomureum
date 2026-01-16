@@ -8,9 +8,19 @@
 	<select id="listDAOByMCode" resultType="com.meomureum.springboot.dto.ScheduleDTO">
 		select * from schedule where m_code = #{m_code}	and s_end >= trunc(sysdate)
 	</select>
-<!-- 	<select id="listDAOByMCode2" resultType="com.meomureum.springboot.dto.ScheduleDTO">
-		select * from schedule where m_code = #{m_code} 
-	</select> -->
+	<select id="listDAOByCntPcode" resultType="com.meomureum.springboot.dto.PlaceDTO">
+	    select * from (
+	        select p.p_code, p.p_place, p.p_addr,
+	               f.file_path, COUNT(r.p_code) as cnt from route r
+	        	join place p on (r.p_code = p.p_code)
+	        	join fileupload f on (p.p_code = f.target_code) 
+	        	and f.target_type = 'PLACE' and f.file_order = 1
+	        	where f.file_path is not null
+	        	group by p.p_code, p.p_place, p.p_addr, f.file_path
+	        	order by cnt DESC
+	    )
+	    WHERE ROWNUM <![CDATA[ <= ]]> 10
+	</select>
 	<select id="selectDAO" resultType="com.meomureum.springboot.dto.ScheduleDTO">
 		select * from schedule where s_code = #{s_code}
 	</select>
