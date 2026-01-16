@@ -166,49 +166,17 @@ public class ScheduleController {
 				noteDTO.setN_order(Integer.parseInt(n_order[i]));
 				
 				// n_api_code 배열이 존재하고, 현재 인덱스에 값이 있다면 (빈 문자열이 아니면)
-		        if (n_api_code != null && n_api_code.length > i && n_api_code[i] != null && !n_api_code[i].isEmpty()) {
-		            
-		            // 1) PlaceDB 확인
-		            PlaceDTO existingPlace = placeDAO.selectDAOByApiCode(n_api_code[i]);
-		            String pCode;
-		            
-		            if (existingPlace != null) {
-		                pCode = existingPlace.getP_code();
-		            } else {
-		                // 2) 신규 장소 저장
-		                PlaceDTO placeDTO = new PlaceDTO();
-		                placeDTO.setApi_code(n_api_code[i]);
-		                placeDTO.setP_place(n_p_name[i]);
-		                placeDTO.setP_addr(n_p_addr[i]);
-		                placeDTO.setP_tel(n_p_tel[i]); // 전화번호 저장
-		                placeDTO.setP_category(n_p_cat[i]);
-		                placeDTO.setP_lon(Double.parseDouble(n_p_x[i]));
-		                placeDTO.setP_lat(Double.parseDouble(n_p_y[i]));
-		                
-		                placeDAO.insertDAO(placeDTO);
-		                pCode = placeDTO.getP_code();
-		                
-		                // 3) 이미지 다운로드 & 저장 (신규 장소일 때만)
-		                if (n_p_img[i] != null && !n_p_img[i].isEmpty()) {
-		                    String savedFileName = saveImageFromUrl(n_p_img[i], uploadDir);
-		                    if (savedFileName != null) {
-		                        FileuploadDTO fileDTO = new FileuploadDTO();
-		                        fileDTO.setTarget_type("PLACE");
-		                        fileDTO.setTarget_code(pCode);
-		                        fileDTO.setFile_name(savedFileName);
-		                        fileDTO.setFile_path("/upload/place/" + savedFileName);
-		                        fileDTO.setFile_order(1);
-		                        fileuploadDAO.insertFile(fileDTO);
-		                    }
-		                }
-		            }
-		            // 4) 노트 DTO에 p_code 세팅 (테이블에 컬럼이 있어야 함)
-		            noteDTO.setP_code(pCode);
+				if (n_api_code != null && n_api_code.length > i) {
+		            String pCode = registerPlaceAndImage(
+		                n_api_code[i], n_p_name[i], n_p_addr[i], n_p_tel[i], 
+		                n_p_cat[i], n_p_x[i], n_p_y[i], n_p_img[i]
+		            );
+		            noteDTO.setP_code(pCode); // 받아온 코드를 노트에 세팅
 		        } else {
-		            noteDTO.setP_code(null); // 장소 없는 노트
+		            noteDTO.setP_code(null);
 		        }
-				
-				noteDAO.insertDAO(noteDTO);
+		        
+		        noteDAO.insertDAO(noteDTO);
 			}
 		}
 		// 5. 여행지 데이터를 가져오고, 루트 데이터 입력
@@ -226,6 +194,7 @@ public class ScheduleController {
 	        String[] p_lat = request.getParameterValues("p_lat");
 	        String[] p_lon = request.getParameterValues("p_lon");
 	        String[] p_category = request.getParameterValues("p_category");
+	        String[] p_tel = request.getParameterValues("p_tel");
 	        
 	        // 이미지 저장할 폴더가 없으면 생성
 	        java.io.File dir = new java.io.File(uploadDir);
@@ -234,59 +203,79 @@ public class ScheduleController {
 	        }
 	        
 	        for (int i=0; i<api_code.length; i++) {
-	            // 1. 여행지 정보(Place) 저장 시도
-	        	// 이미 DB에 기록된 곳인지 확인
-	        	PlaceDTO existingPlace = placeDAO.selectDAOByApiCode(api_code[i]);
-	            String existingPCode;
-	            
-	            // 이미 기록된 곳이라면 pcode만 변수에 가져옴
-	            if (existingPlace != null) {
-	            	existingPCode = existingPlace.getP_code();
-            	// 새로운 곳이라면 여행지 정보 저장 + 마이바티스 selectKey기능으로 넘김
-	            } else {
-	            	PlaceDTO placeDTO = new PlaceDTO();
-		            placeDTO.setApi_code(api_code[i]); // TourAPI contentid
-		            placeDTO.setP_place(p_place[i]);
-		            placeDTO.setP_category(p_category[i]);
-		            placeDTO.setP_lat(Double.parseDouble(p_lat[i]));
-		            placeDTO.setP_lon(Double.parseDouble(p_lon[i]));
-		            placeDTO.setP_addr(p_addr[i]);
-		            
-		            placeDAO.insertDAO(placeDTO);
-		            existingPCode = placeDTO.getP_code();
-		            
-		            // 이미지 다운로드 및 fileupload 테이블 저장 (신규 장소일 경우에만 수행)
-	                if (p_image_url != null && p_image_url.length > i && 
-	                    p_image_url[i] != null && !p_image_url[i].isEmpty()) {
-	                    
-	                    String savedFileName = saveImageFromUrl(p_image_url[i], uploadDir);
-	                    
-	                    if (savedFileName != null) {
-	                        //FileuploadDTO 생성 및 저장 (DTO 구조에 맞게 수정 필요)
-	                        FileuploadDTO fileDTO = new FileuploadDTO();
-	                        fileDTO.setTarget_type("PLACE");
-	                        fileDTO.setTarget_code(existingPCode);
-	                        fileDTO.setFile_name(savedFileName);
-	                        fileDTO.setFile_path("/upload/place/" + savedFileName);
-	                        fileDTO.setFile_order(1);
-	                        fileuploadDAO.insertFile(fileDTO);
-	                    }
-	                }
-	            }
-	            
-	            // 2. 루트 정보 생성 및 저장
-	            RouteDTO routeDTO = new RouteDTO();
-	            routeDTO.setS_code(s_code);
-	            routeDTO.setP_code(existingPCode);
-	            routeDTO.setR_day(Integer.parseInt(r_day[i]));
-	            routeDTO.setR_order(Integer.parseInt(r_order[i]));
-	            routeDTO.setR_memo(r_memo[i]);
-	            
-	            routeDAO.insertDAO(routeDTO);
+	        	String pCode = registerPlaceAndImage(
+                    api_code[i], p_place[i], p_addr[i], p_tel[i], 
+                    p_category[i], p_lon[i], p_lat[i], p_image_url[i]
+                );
+                
+                // 루트 정보 생성 및 저장
+                RouteDTO routeDTO = new RouteDTO();
+                routeDTO.setS_code(s_code);
+                routeDTO.setP_code(pCode); // 받아온 코드 세팅
+                routeDTO.setR_day(Integer.parseInt(r_day[i]));
+                routeDTO.setR_order(Integer.parseInt(r_order[i]));
+                routeDTO.setR_memo(r_memo[i]);
+                
+                routeDAO.insertDAO(routeDTO);
 	        }	
 	    }
 		
 		return "redirect:/user/mypage/main";
+	}
+	
+	// 장소 저장 및 이미지 다운로드 공통 메서드
+	private String registerPlaceAndImage(String apiCode, String name, String addr, String tel, 
+	                                   String cat, String x, String y, String imageUrl) {
+	    
+	    // 1. 필수 값 체크 (API 코드가 없으면 로직 수행 불가)
+	    if (apiCode == null || apiCode.isEmpty()) {
+	        return null;
+	    }
+
+	    // 2. 이미 DB에 있는 장소인지 확인
+	    PlaceDTO existingPlace = placeDAO.selectDAOByApiCode(apiCode);
+	    if (existingPlace != null) {
+	        return existingPlace.getP_code(); // 이미 있으면 그 코드 바로 리턴
+	    }
+
+	    // 3. 신규 장소라면 DB에 저장
+	    PlaceDTO placeDTO = new PlaceDTO();
+	    placeDTO.setApi_code(apiCode);
+	    placeDTO.setP_place(name);
+	    placeDTO.setP_addr(addr);
+	    placeDTO.setP_tel(tel); // 루트에서는 null일 수 있음
+	    placeDTO.setP_category(cat);
+	    
+	    // 좌표 변환 (String -> Double)
+	    try {
+	        placeDTO.setP_lon(Double.parseDouble(x));
+	        placeDTO.setP_lat(Double.parseDouble(y));
+	    } catch (NumberFormatException | NullPointerException e) {
+	        // 좌표가 없거나 오류나면 0.0 처리
+	        placeDTO.setP_lon(0.0);
+	        placeDTO.setP_lat(0.0);
+	    }
+
+	    placeDAO.insertDAO(placeDTO);
+	    String newPCode = placeDTO.getP_code(); // 방금 생성된 PK
+
+	    // 4. 이미지 다운로드 및 저장 (이미지 URL이 있는 경우만)
+	    if (imageUrl != null && !imageUrl.isEmpty()) {
+	        String savedFileName = saveImageFromUrl(imageUrl, uploadDir);
+	        
+	        if (savedFileName != null) {
+	            FileuploadDTO fileDTO = new FileuploadDTO();
+	            fileDTO.setTarget_type("PLACE");
+	            fileDTO.setTarget_code(newPCode);
+	            fileDTO.setFile_name(savedFileName);
+	            fileDTO.setFile_path("/upload/place/" + savedFileName);
+	            fileDTO.setFile_order(1);
+	            
+	            fileuploadDAO.insertFile(fileDTO);
+	        }
+	    }
+
+	    return newPCode; // 새로 만든 p_code 리턴
 	}
 	
 	// 이미지를 URL에서 다운로드하여 저장하는 메소드
