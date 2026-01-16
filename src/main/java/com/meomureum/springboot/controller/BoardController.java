@@ -58,41 +58,35 @@ public class BoardController {
     }
 
 
-    // 📍 게시글 상세 조회(조회수 증가 포함)
+    // 📍 게시글 상세 조회
     @GetMapping("/detail/{b_code}")
     public String detail(@PathVariable("b_code") String b_code,
                          Model model,
                          HttpServletResponse resp,
                          Authentication authentication,
                          HttpSession session) {
-        // 캐시 방지 헤더
         resp.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
         resp.setHeader("Pragma", "no-cache");
         resp.setDateHeader("Expires", 0);
 
-        // 데이터 로드
         boardDAO.increaseViewCount(b_code);
         BoardDTO board = boardDAO.selectDao(b_code);
         model.addAttribute("board", board);
 
-        List<FileuploadDTO> fileList = fileuploadDAO.selectFilesByTarget(b_code);
-        model.addAttribute("fileList", fileList);
+        model.addAttribute("fileList", fileuploadDAO.selectFilesByTarget(b_code));
+        model.addAttribute("replyList", replyDAO.getReplies(b_code));
 
-        List<ReplyDTO> replyList = replyDAO.getReplies(b_code);
-        model.addAttribute("replyList", replyList);
-
-        // 로그인 사용자 세션 저장
         if (authentication != null) {
             String m_id = authentication.getName();
             MemberDTO member = memberDAO.selectDAOById(m_id);
             if (member != null) {
-                session.setAttribute("m_code", member.getM_code());   // 로그인 사용자 코드
-                session.setAttribute("loginRole", member.getM_auth()); // 예: USER, ADMIN
+                session.setAttribute("m_code", member.getM_code());
+                session.setAttribute("loginRole", member.getM_auth());
             }
         }
-
         return "user/board/detail";
     }
+
 
 
     // 📍 글 작성 폼 이동
@@ -109,7 +103,7 @@ public class BoardController {
         if (!file.isEmpty()) {
             // 파일명 중복 방지를 위한 UUID 랜덤 이름 생성
             String fileName = java.util.UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-            String uploadPath = "C:/upload/";
+            String uploadPath = "C:/upload/"; // TODO: 설정값으로 분리 권장
             
             File dest = new File(uploadPath + fileName);
             file.transferTo(dest); // C드라이브에 저장
@@ -124,9 +118,12 @@ public class BoardController {
     // 📍 글 작성 처리
     @PostMapping("/write")
     public String write(BoardDTO dto, Authentication authentication) {
+    	if (authentication == null) return "redirect:/guest/loginForm";
         // 이제 dto.getB_content() 안에는 글과 <img src="..."> 태그가 섞여서 들어옵니다.   		
 		String m_id = authentication.getName();
 		MemberDTO memberDTO = memberDAO.selectDAOById(m_id);
+		if (memberDTO == null) return "redirect:/guest/loginForm";
+
 		dto.setM_code(memberDTO.getM_code()); // 작성자 코드 주입
     	boardDAO.insertDao(dto); 
     	return "redirect:/user/board/list?t=" + System.currentTimeMillis();
@@ -144,6 +141,7 @@ public class BoardController {
     // 📍 글 수정 처리
     @PostMapping("/update")
     public String update(BoardDTO dto, Authentication authentication) {
+    	if (authentication == null) return "redirect:/guest/loginForm";
         String m_id = authentication.getName();
         MemberDTO member = memberDAO.selectDAOById(m_id);
         if (member == null) return "redirect:/guest/loginForm";
@@ -154,19 +152,9 @@ public class BoardController {
         BoardDTO origin = boardDAO.selectDao(dto.getB_code());
         if (origin == null) return "redirect:/user/board/list";
 
-        System.out.println("[BoardController] loginUser=" + loginUser +
-                           ", origin.m_code=" + origin.getM_code() +
-                           ", role=" + role);
-
-        if (loginUser != null && (loginUser.equals(origin.getM_code()) ||
-                                  role.equalsIgnoreCase("ADMIN") ||
-                                  role.equals("ROLE_ADMIN"))) {
-            int affected = boardDAO.updateDao(dto);
-            System.out.println("[BoardController] update 실행됨, 영향 행 수 = " + affected);
-        } else {
-            System.out.println("[BoardController] update 실패: 권한 없음");
+        if (loginUser.equals(origin.getM_code()) || role.equalsIgnoreCase("ADMIN") || role.equals("ROLE_ADMIN")) {
+            boardDAO.updateDao(dto);
         }
-
         return "redirect:/user/board/detail/" + dto.getB_code() + "?t=" + System.currentTimeMillis();
     }
 
@@ -174,6 +162,7 @@ public class BoardController {
     // 📍 게시글 삭제 (권한 체크 + 영향 행 수 로그)
     @GetMapping("/delete/{b_code}")
     public String delete(@PathVariable("b_code") String b_code, Authentication authentication) {
+    	if (authentication == null) return "redirect:/guest/loginForm";
         String m_id = authentication.getName();
         MemberDTO member = memberDAO.selectDAOById(m_id);
         if (member == null) return "redirect:/guest/loginForm";
@@ -184,29 +173,20 @@ public class BoardController {
         BoardDTO origin = boardDAO.selectDao(b_code);
         if (origin == null) return "redirect:/user/board/list";
 
-        System.out.println("[BoardController] loginUser=" + loginUser +
-                           ", origin.m_code=" + origin.getM_code() +
-                           ", role=" + role);
-
-        if (loginUser != null && (loginUser.equals(origin.getM_code()) ||
-                                  role.equalsIgnoreCase("ADMIN") ||
-                                  role.equals("ROLE_ADMIN"))) {
-            int affected = boardDAO.deleteDao(b_code);
-            System.out.println("[BoardController] delete 실행됨, 영향 행 수 = " + affected);
-        } else {
-            System.out.println("[BoardController] delete 실패: 권한 없음");
+        if (loginUser.equals(origin.getM_code()) || role.equalsIgnoreCase("ADMIN") || role.equals("ROLE_ADMIN")) {
+            boardDAO.deleteDao(b_code);
         }
-
         return "redirect:/user/board/list?t=" + System.currentTimeMillis();
     }
-
-
 
     // 📍 댓글 등록
     @PostMapping("/reply/write")
     public String writeReply(ReplyDTO dto, Authentication authentication) {
-        String m_id = authentication.getName();
+    	if (authentication == null) return "redirect:/guest/loginForm";
+    	String m_id = authentication.getName();
         MemberDTO member = memberDAO.selectDAOById(m_id);
+        if (member == null) return "redirect:/guest/loginForm";
+
         dto.setM_code(member.getM_code()); // 작성자 코드 주입 (필수)
         if (dto.getRe_secret() == null) dto.setRe_secret("N");
         dto.setRe_depth(0);
@@ -217,7 +197,8 @@ public class BoardController {
     // 📍 댓글 수정
     @PostMapping("/reply/update")
     public String updateReply(ReplyDTO dto, Authentication authentication) {
-        String m_id = authentication.getName();
+    	if (authentication == null) return "redirect:/guest/loginForm";
+    	String m_id = authentication.getName();
         MemberDTO member = memberDAO.selectDAOById(m_id);
         if (member == null) return "redirect:/guest/loginForm";
 
@@ -229,21 +210,18 @@ public class BoardController {
 
         if (dto.getRe_secret() == null) dto.setRe_secret("N");
 
-        if (loginUser != null && (loginUser.equals(origin.getM_code()) ||
-                                  role.equalsIgnoreCase("ADMIN") ||
-                                  role.equals("ROLE_ADMIN"))) {
+        if (loginUser.equals(origin.getM_code()) || role.equalsIgnoreCase("ADMIN") || role.equals("ROLE_ADMIN")) {
             replyDAO.updateReply(dto);
         }
-
         return "redirect:/user/board/detail/" + dto.getB_code() + "?t=" + System.currentTimeMillis();
     }
-
 
     // 📍 댓글 삭제
     @GetMapping("/reply/delete/{re_code}/{b_code}")
     public String deleteReply(@PathVariable("re_code") String re_code,
                               @PathVariable("b_code") String b_code,
                               Authentication authentication) {
+    	if (authentication == null) return "redirect:/guest/loginForm";
         String m_id = authentication.getName();
         MemberDTO member = memberDAO.selectDAOById(m_id);
         if (member == null) return "redirect:/guest/loginForm";
