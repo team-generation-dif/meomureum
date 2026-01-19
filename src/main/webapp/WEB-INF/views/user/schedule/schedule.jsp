@@ -343,7 +343,6 @@
 							                    <div class="info-tel" style="color:#007bff;">${note.p_tel}</div>
 							                </div>
 							            </div>
-							            <input type="hidden" name="n_api_code" value="${note.api_code}">
 						            </c:if>
 						        	<%-- 값이 있으면 넣고, 없으면 빈 값("")을 넣어 배열 순서를 맞춤 --%>
 							        <input type="hidden" name="n_api_code" value="${note.api_code != null ? note.api_code : ''}">
