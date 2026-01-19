@@ -116,7 +116,7 @@
             <thead>
                 <tr>
                     <th width="15%">카테고리</th>
-                    <th width="50%">제목 (클릭 시 내용 보기)</th>
+                    <th width="50%">제목</th>
                     <th width="20%">등록일</th>
                     <th width="15%">관리</th>
                 </tr>
