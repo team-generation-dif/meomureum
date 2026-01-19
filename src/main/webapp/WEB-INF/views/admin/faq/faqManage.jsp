@@ -89,8 +89,8 @@
                 <select name="faq_category" class="form-control" style="width: 200px; flex-shrink: 0;">
                     <option value="회원가입">회원가입</option>
                     <option value="게시판">게시판</option>
-                    <option value="커뮤니티">커뮤니티</option>
-                    <option value="계정관리">계정관리</option>
+                    <option value="커뮤니티">신고</option>
+                    <option value="계정관리">등급</option>
                     <option value="이용안내">이용안내</option>
                     <option value="기타">기타</option>
                 </select>
