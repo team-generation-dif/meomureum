@@ -167,9 +167,19 @@ public class ScheduleController {
 				
 				// n_api_code 배열이 존재하고, 현재 인덱스에 값이 있다면 (빈 문자열이 아니면)
 				if (n_api_code != null && n_api_code.length > i) {
+					
+					String tel = (n_p_tel != null && n_p_tel.length > i) ? n_p_tel[i] : null;
+		            String cat = (n_p_cat != null && n_p_cat.length > i) ? n_p_cat[i] : null;
+		            String xVal = (n_p_x != null && n_p_x.length > i) ? n_p_x[i] : "0";
+		            String yVal = (n_p_y != null && n_p_y.length > i) ? n_p_y[i] : "0";
+		            
+		            // 값이 있으면(지도에서 옴) -> URL 문자열이 들어감
+		            // 값이 없으면(새 노트) -> 빈 문자열("") 혹은 null이 들어감
+		            String img = (n_p_img != null && n_p_img.length > i) ? n_p_img[i] : null;
+		            
 		            String pCode = registerPlaceAndImage(
-		                n_api_code[i], n_p_name[i], n_p_addr[i], n_p_tel[i], 
-		                n_p_cat[i], n_p_x[i], n_p_y[i], n_p_img[i]
+		                n_api_code[i], n_p_name[i], n_p_addr[i], tel, 
+		                cat, xVal, yVal, img
 		            );
 		            noteDTO.setP_code(pCode); // 받아온 코드를 노트에 세팅
 		        } else {
