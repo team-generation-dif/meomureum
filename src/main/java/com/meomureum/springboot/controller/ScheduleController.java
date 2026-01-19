@@ -203,9 +203,12 @@ public class ScheduleController {
 	        }
 	        
 	        for (int i=0; i<api_code.length; i++) {
+	        	String tel = (p_tel != null && p_tel.length > i) ? p_tel[i] : null;
+	            String img = (p_image_url != null && p_image_url.length > i) ? p_image_url[i] : null;
+	        	
 	        	String pCode = registerPlaceAndImage(
-                    api_code[i], p_place[i], p_addr[i], p_tel[i], 
-                    p_category[i], p_lon[i], p_lat[i], p_image_url[i]
+                    api_code[i], p_place[i], p_addr[i], tel, 
+                    p_category[i], p_lon[i], p_lat[i], img
                 );
                 
                 // 루트 정보 생성 및 저장
