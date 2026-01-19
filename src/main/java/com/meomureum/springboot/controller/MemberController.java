@@ -124,6 +124,12 @@ public class MemberController {
         model.addAttribute("myRecentPosts", boardDAO.getMyRecentPosts(dto.getM_code()));
         return "user/mypage/main"; 
     }
+ // 비밀번호 확인 폼을 띄워주는 메서드 추가
+    @RequestMapping(value = "/user/mypage/confirmPwForm", method = RequestMethod.GET)
+    public String confirmPwForm(@RequestParam("mode") String mode, Model model) {
+        model.addAttribute("mode", mode); // 수정(edit)인지 탈퇴(delete)인지 구분하기 위해 전달
+        return "user/mypage/confirmPw";   // 리턴할 JSP 파일명 (이미 confirmPw.jsp를 쓰고 계신 것 같네요)
+    }
 
     @PostMapping("/user/mypage/checkPw")
     public String checkPw(@RequestParam("m_passwd") String rawPassword, 
